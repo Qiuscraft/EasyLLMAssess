@@ -8,7 +8,7 @@ importers:
 
   .:
     dependencies:
-      '@nuxt/ui':
+      '@nuxt/ui-pro':
         specifier: ^3.1.3
         version: 3.1.3(@babel/parser@7.27.3)(db0@0.3.2(mysql2@3.14.1))(embla-carousel@8.6.0)(ioredis@5.6.1)(jwt-decode@4.0.0)(magicast@0.3.5)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))(vue-router@4.5.1(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)
       '@tailwindcss/vite':
@@ -31,6 +31,31 @@ importers:
         version: 4.5.1(vue@3.5.15(typescript@5.8.3))
 
 packages:
+
+  '@ai-sdk/provider-utils@2.2.8':
+    resolution: {integrity: sha512-fqhG+4sCVv8x7nFzYnFo19ryhAa3w096Kmc3hWxMQfW/TubPOmt3A6tYZhl4mUfQWWQMsuSkLrtjlWuXBVSGQA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.23.8
+
+  '@ai-sdk/provider@1.1.3':
+    resolution: {integrity: sha512-qZMxYJ0qqX/RfnuIaab+zp8UAeJn/ygXXAffR5I4N0n1IrvA6qBsjc8hXLmBiMV2zoXlifkacF7sEFnYnjBcqg==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/ui-utils@1.2.11':
+    resolution: {integrity: sha512-3zcwCc8ezzFlwp3ZD15wAPjf2Au4s3vAbKsXQVyhxODHcmu0iyPO2Eua6D/vicq/AUm/BAo60r97O6HU+EI0+w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.23.8
+
+  '@ai-sdk/vue@1.2.12':
+    resolution: {integrity: sha512-uJJ4w6vlj3mmWzjwg+1dqKtyQSVmavO//189eh3D6bUC/G17OWQdV47b67FaOiNkdlDIxormmbUOjlYDQv0TtA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      vue: ^3.3.4
+    peerDependenciesMeta:
+      vue:
+        optional: true
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -659,6 +684,27 @@ packages:
     resolution: {integrity: sha512-Zh4HJLjzvm3Cq9w6sfzIFyH9ozK5ePYVfCUzzUQNiZojFsI2k1QkSBrVI9BGc6ArKXj/O6rkI6w7qQ+ouL8Cag==}
     engines: {node: '>=18.12.0'}
     hasBin: true
+
+  '@nuxt/ui-pro@3.1.3':
+    resolution: {integrity: sha512-BpSXW3aNVNpFmxNpSmxNwSYdwIB6XTGw0Id9Lcde+S7BJMgvWcx10ShuWjaZto8obazL6aYf84hfbpCGLBymlA==}
+    peerDependencies:
+      joi: ^17.13.0
+      superstruct: ^2.0.0
+      typescript: ^5.6.3
+      valibot: ^1.0.0
+      yup: ^1.6.0
+      zod: ^3.24.0
+    peerDependenciesMeta:
+      joi:
+        optional: true
+      superstruct:
+        optional: true
+      valibot:
+        optional: true
+      yup:
+        optional: true
+      zod:
+        optional: true
 
   '@nuxt/ui@3.1.3':
     resolution: {integrity: sha512-mhoYyXrRf1JAWj3RZ3htGup9N/IbNgNLn4jWHBxOilEFUk7af6qGUVqawv/EiPRa8iP2kK3tkxmzZ0wf2wt/KQ==}
@@ -2571,6 +2617,9 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
+
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
@@ -3481,6 +3530,9 @@ packages:
   scule@1.3.0:
     resolution: {integrity: sha512-6FtHJEvt+pVMIB9IBY+IcCJ6Z5f1iQnytgyfKMhDKgmzYG+TeH/wx1y3l27rshSbLiSanrR9ffZDrEsmjlQF2g==}
 
+  secure-json-parse@2.7.0:
+    resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -3667,6 +3719,11 @@ packages:
     resolution: {integrity: sha512-OoohrmuUlBs8B8o6MB2Aevn+pRIH9zDALSR+6hhqVfa6fRwG/Qw9VUMSMW9VNg2CFc/MTIfabtdOVl9ODIJjpw==}
     engines: {node: '>=14.0.0'}
     hasBin: true
+
+  swrv@1.1.0:
+    resolution: {integrity: sha512-pjllRDr2s0iTwiE5Isvip51dZGR7GjLH1gCSVyE8bQnbAx6xackXsFdojau+1O5u98yHF5V73HQGOFxKUXO9gQ==}
+    peerDependencies:
+      vue: '>=3.2.26 < 4'
 
   system-architecture@0.1.0:
     resolution: {integrity: sha512-ulAk51I9UVUyJgxlv9M6lFot2WP3e7t8Kz9+IS6D4rVba1tR9kON+Ey69f+1R4Q8cd45Lod6a4IcJIxnzGc/zA==}
@@ -4218,10 +4275,43 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
+  zod-to-json-schema@3.24.5:
+    resolution: {integrity: sha512-/AuWwMP+YqiPbsJx5D6TfgRTc4kTLjsh5SOcd4bLsfUg2RcEXrFMJl1DGgdHy2aCfsIA/cr/1JM0xcB2GZji8g==}
+    peerDependencies:
+      zod: ^3.24.1
+
   zod@3.25.30:
     resolution: {integrity: sha512-VolhdEtu6TJr/fzGuHA/SZ5ixvXqA6ADOG9VRcQ3rdOKmF5hkmcJbyaQjUH5BgmpA9gej++zYRX7zjSmdReIwA==}
 
 snapshots:
+
+  '@ai-sdk/provider-utils@2.2.8(zod@3.25.30)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      nanoid: 3.3.11
+      secure-json-parse: 2.7.0
+      zod: 3.25.30
+
+  '@ai-sdk/provider@1.1.3':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/ui-utils@1.2.11(zod@3.25.30)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.30)
+      zod: 3.25.30
+      zod-to-json-schema: 3.24.5(zod@3.25.30)
+
+  '@ai-sdk/vue@1.2.12(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)':
+    dependencies:
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.30)
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.30)
+      swrv: 1.1.0(vue@3.5.15(typescript@5.8.3))
+    optionalDependencies:
+      vue: 3.5.15(typescript@5.8.3)
+    transitivePeerDependencies:
+      - zod
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -4898,7 +4988,7 @@ snapshots:
       simple-git: 3.27.0
       sirv: 3.0.1
       structured-clone-es: 1.0.0
-      tinyglobby: 0.2.13
+      tinyglobby: 0.2.14
       vite: 6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0)
       vite-plugin-inspect: 11.1.0(@nuxt/kit@3.17.4(magicast@0.3.5))(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))
       vite-plugin-vue-tracer: 0.1.3(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))(vue@3.5.15(typescript@5.8.3))
@@ -4996,7 +5086,7 @@ snapshots:
       scule: 1.3.0
       semver: 7.7.2
       std-env: 3.9.0
-      tinyglobby: 0.2.13
+      tinyglobby: 0.2.14
       ufo: 1.6.1
       unctx: 2.4.1
       unimport: 5.0.1
@@ -5028,6 +5118,70 @@ snapshots:
       std-env: 3.9.0
     transitivePeerDependencies:
       - magicast
+
+  '@nuxt/ui-pro@3.1.3(@babel/parser@7.27.3)(db0@0.3.2(mysql2@3.14.1))(embla-carousel@8.6.0)(ioredis@5.6.1)(jwt-decode@4.0.0)(magicast@0.3.5)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))(vue-router@4.5.1(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)':
+    dependencies:
+      '@ai-sdk/vue': 1.2.12(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)
+      '@nuxt/kit': 3.17.4(magicast@0.3.5)
+      '@nuxt/schema': 3.17.4
+      '@nuxt/ui': 3.1.3(@babel/parser@7.27.3)(db0@0.3.2(mysql2@3.14.1))(embla-carousel@8.6.0)(ioredis@5.6.1)(jwt-decode@4.0.0)(magicast@0.3.5)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))(vue-router@4.5.1(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)
+      '@standard-schema/spec': 1.0.0
+      '@vueuse/core': 13.3.0(vue@3.5.15(typescript@5.8.3))
+      consola: 3.4.2
+      defu: 6.1.4
+      dotenv: 16.5.0
+      git-url-parse: 16.1.0
+      ofetch: 1.4.1
+      ohash: 2.0.11
+      pathe: 2.0.3
+      pkg-types: 2.1.0
+      scule: 1.3.0
+      tinyglobby: 0.2.14
+      typescript: 5.8.3
+      unplugin: 2.3.5
+      unplugin-auto-import: 19.3.0(@nuxt/kit@3.17.4(magicast@0.3.5))(@vueuse/core@13.3.0(vue@3.5.15(typescript@5.8.3)))
+      unplugin-vue-components: 28.7.0(@babel/parser@7.27.3)(@nuxt/kit@3.17.4(magicast@0.3.5))(vue@3.5.15(typescript@5.8.3))
+    optionalDependencies:
+      zod: 3.25.30
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@babel/parser'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@inertiajs/vue3'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/kv'
+      - '@vue/composition-api'
+      - async-validator
+      - aws4fetch
+      - axios
+      - change-case
+      - db0
+      - drauu
+      - embla-carousel
+      - encoding
+      - focus-trap
+      - idb-keyval
+      - ioredis
+      - jwt-decode
+      - magicast
+      - nprogress
+      - qrcode
+      - sortablejs
+      - supports-color
+      - universal-cookie
+      - uploadthing
+      - vite
+      - vue
+      - vue-router
 
   '@nuxt/ui@3.1.3(@babel/parser@7.27.3)(db0@0.3.2(mysql2@3.14.1))(embla-carousel@8.6.0)(ioredis@5.6.1)(jwt-decode@4.0.0)(magicast@0.3.5)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0))(vue-router@4.5.1(vue@3.5.15(typescript@5.8.3)))(vue@3.5.15(typescript@5.8.3))(zod@3.25.30)':
     dependencies:
@@ -6978,6 +7132,8 @@ snapshots:
 
   jsesc@3.1.0: {}
 
+  json-schema@0.4.0: {}
+
   json5@2.2.3: {}
 
   junk@4.0.1: {}
@@ -8067,6 +8223,8 @@ snapshots:
 
   scule@1.3.0: {}
 
+  secure-json-parse@2.7.0: {}
+
   semver@6.3.1: {}
 
   semver@7.7.2: {}
@@ -8274,6 +8432,10 @@ snapshots:
       csso: 5.0.5
       picocolors: 1.1.1
 
+  swrv@1.1.0(vue@3.5.15(typescript@5.8.3)):
+    dependencies:
+      vue: 3.5.15(typescript@5.8.3)
+
   system-architecture@0.1.0: {}
 
   tailwind-merge@3.0.2: {}
@@ -8442,7 +8604,7 @@ snapshots:
       pkg-types: 2.1.0
       scule: 1.3.0
       strip-literal: 3.0.0
-      tinyglobby: 0.2.13
+      tinyglobby: 0.2.14
       unplugin: 2.3.5
       unplugin-utils: 0.2.4
 
@@ -8623,7 +8785,7 @@ snapshots:
       picomatch: 4.0.2
       strip-ansi: 7.1.0
       tiny-invariant: 1.3.3
-      tinyglobby: 0.2.13
+      tinyglobby: 0.2.14
       vite: 6.3.5(@types/node@22.15.21)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(yaml@2.8.0)
       vscode-uri: 3.1.0
     optionalDependencies:
@@ -8663,7 +8825,7 @@ snapshots:
       picomatch: 4.0.2
       postcss: 8.5.3
       rollup: 4.41.1
-      tinyglobby: 0.2.13
+      tinyglobby: 0.2.14
     optionalDependencies:
       '@types/node': 22.15.21
       fsevents: 2.3.3
@@ -8807,5 +8969,9 @@ snapshots:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.7.0
+
+  zod-to-json-schema@3.24.5(zod@3.25.30):
+    dependencies:
+      zod: 3.25.30
 
   zod@3.25.30: {}

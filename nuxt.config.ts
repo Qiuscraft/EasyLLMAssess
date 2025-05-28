@@ -14,7 +14,7 @@ export default defineNuxtConfig({
       database: 'EasyLLMAssess',
     },
   },
-  modules: ['@nuxt/ui'],
+  modules: ['@nuxt/ui-pro'],
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [

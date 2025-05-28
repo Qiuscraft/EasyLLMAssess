@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
@@ -10,5 +13,12 @@ export default defineNuxtConfig({
       password: 'your_password',
       database: 'EasyLLMAssess',
     },
+  },
+  modules: ['@nuxt/ui'],
+  css: ['~/assets/css/main.css'],
+  vite: {
+    plugins: [
+      tailwindcss(),
+    ],
   },
 })

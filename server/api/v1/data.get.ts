@@ -1,6 +1,6 @@
 import {getData} from "~/server/db/get";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
     try {
         // 调用导入函数处理数据
         const data = await getData();

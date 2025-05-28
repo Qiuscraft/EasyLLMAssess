@@ -1,6 +1,4 @@
-# Nuxt Minimal Starter
-
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+# EasyLLMAssess
 
 ## Setup
 
@@ -18,6 +16,16 @@ yarn install
 
 # bun
 bun install
+```
+
+Create a `.env` file in the root directory and configure the necessary environment variables:
+
+```text
+NUXT_MYSQL_HOST=localhost
+NUXT_MYSQL_PORT=3306
+NUXT_MYSQL_USER=root
+NUXT_MYSQL_PASSWORD=your_password
+NUXT_MYSQL_DATABASE=EasyLLMAssess
 ```
 
 ## Development Server

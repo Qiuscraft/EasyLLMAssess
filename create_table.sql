@@ -6,6 +6,7 @@ CREATE TABLE src_question (
 CREATE TABLE std_question (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,
+    answer TEXT NOT NULL,
     src_id INT NOT NULL REFERENCES src_question(id)
 );
 
@@ -20,22 +21,16 @@ CREATE TABLE std_question_tag (
     PRIMARY KEY (std_question_id, tag_id)
 );
 
-CREATE TABLE std_answer (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    std_question_id INT NOT NULL REFERENCES std_question(id),
-    content TEXT NOT NULL
-);
-
 CREATE TABLE point (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,
     score DECIMAL NOT NULL
 );
 
-CREATE TABLE std_answer_point (
-    std_answer_id INT NOT NULL REFERENCES std_answer(id),
+CREATE TABLE std_question_point (
+    std_question_id INT NOT NULL REFERENCES std_question(id),
     point_id INT NOT NULL REFERENCES point(id),
-    PRIMARY KEY (std_answer_id, point_id)
+    PRIMARY KEY (std_question_id, point_id)
 );
 
 CREATE TABLE candidate_answer (

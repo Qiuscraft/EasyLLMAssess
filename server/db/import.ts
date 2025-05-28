@@ -50,17 +50,10 @@ async function importSrcQuestions(srcQuestions: SrcQuestion[]) {
         for (const stdQuestion of srcQuestion.stdQuestions) {
           // 插入标准问题
           const [stdQuestionResult] = await conn.execute(
-              'INSERT INTO std_question (content, src_id) VALUES (?, ?)',
-              [stdQuestion.question, srcId]
+              'INSERT INTO std_question (content, answer, src_id) VALUES (?, ?, ?)',
+              [stdQuestion.question, stdQuestion.answer, srcId]
           );
           const stdQuestionId = (stdQuestionResult as mysql.ResultSetHeader).insertId;
-
-          // 插入标准答案
-          const [stdAnswerResult] = await conn.execute(
-              'INSERT INTO std_answer (std_question_id, content) VALUES (?, ?)',
-              [stdQuestionId, stdQuestion.answer]
-          );
-          const stdAnswerId = (stdAnswerResult as mysql.ResultSetHeader).insertId;
 
           // 处理每个评分点
           for (const point of stdQuestion.points) {
@@ -73,8 +66,8 @@ async function importSrcQuestions(srcQuestions: SrcQuestion[]) {
 
             // 建立标准答案和评分点的关联
             await conn.execute(
-                'INSERT INTO std_answer_point (std_answer_id, point_id) VALUES (?, ?)',
-                [stdAnswerId, pointId]
+                'INSERT INTO std_question_point (std_question_id, point_id) VALUES (?, ?)',
+                [stdQuestionId, pointId]
             );
           }
         }

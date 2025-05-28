@@ -14,14 +14,14 @@ export default defineEventHandler(async (event) => {
         // 返回成功响应
         return {
             success: true,
-            message: 'success'
+            message: 'success',
         }
     } catch (error) {
         // 返回错误响应
         return {
             success: false,
             message: error instanceof Error
-                ? error.message
+                ? `${error.message}`
                 : 'error',
         }
     }

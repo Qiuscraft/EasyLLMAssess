@@ -30,10 +30,6 @@ export async function importFromJsonString(json: string) {
   return await importSrcQuestions(srcQuestions);
 }
 
-async function importSrcQuestion(srcQuestion: InsertingSrcQuestion) {
-  return await importSrcQuestions([srcQuestion]);
-}
-
 async function importSrcQuestions(srcQuestions: InsertingSrcQuestion[]) {
   return await withConnection(async (conn: mysql.Connection) => {
     try {

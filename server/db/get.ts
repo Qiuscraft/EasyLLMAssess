@@ -35,7 +35,6 @@ export async function getData(): Promise<SrcQuestion[]> {
                 id: row.id,
                 content: row.content,
                 answer: row.answer,
-                src_id: row.src_id,
                 points: []
             };
 

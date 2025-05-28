@@ -7,10 +7,10 @@ export interface InsertingPoint {
 }
 
 /**
- * 标准问题接口 - 对应数据库中的 std_question 和 std_answer 表
+ * 标准问题接口 - 对应数据库中的 std_question 表
  */
 export interface InsertingStdQuestion {
-    question: string;  // 问题内容
+    content: string;  // 问题内容
     answer: string;    // 答案内容
     points: InsertingPoint[];   // 评分点数组
 }

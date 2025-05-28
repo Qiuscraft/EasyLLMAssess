@@ -10,7 +10,7 @@ export async function importFromJsonString(json: string) {
     let stdQuestions: InsertingStdQuestion[] = [];
     for (const stdQuestionItem of item.std_questions) {
       let stdQuestion: InsertingStdQuestion = {
-        question: stdQuestionItem.question,
+        content: stdQuestionItem.question,
         answer: stdQuestionItem.answer,
         points: stdQuestionItem.points.map((point: InsertingPoint) => ({
           content: point.content,
@@ -51,7 +51,7 @@ async function importSrcQuestions(srcQuestions: InsertingSrcQuestion[]) {
           // 插入标准问题
           const [stdQuestionResult] = await conn.execute(
               'INSERT INTO std_question (content, answer, src_id) VALUES (?, ?, ?)',
-              [stdQuestion.question, stdQuestion.answer, srcId]
+              [stdQuestion.content, stdQuestion.answer, srcId]
           );
           const stdQuestionId = (stdQuestionResult as mysql.ResultSetHeader).insertId;
 

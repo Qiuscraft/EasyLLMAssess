@@ -1,18 +1,18 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {Point, SrcQuestion, StdQuestion} from "~/server/types/inserting";
+import {InsertingPoint, InsertingSrcQuestion, InsertingStdQuestion} from "~/server/types/inserting";
 
 export async function importFromJsonString(json: string) {
   const data = JSON.parse(json);
-  let srcQuestions: SrcQuestion[] = [];
+  let srcQuestions: InsertingSrcQuestion[] = [];
 
   for (const item of data) {
-    let stdQuestions: StdQuestion[] = [];
+    let stdQuestions: InsertingStdQuestion[] = [];
     for (const stdQuestionItem of item.std_questions) {
-      let stdQuestion: StdQuestion = {
+      let stdQuestion: InsertingStdQuestion = {
         question: stdQuestionItem.question,
         answer: stdQuestionItem.answer,
-        points: stdQuestionItem.points.map((point: Point) => ({
+        points: stdQuestionItem.points.map((point: InsertingPoint) => ({
           content: point.content,
           score: point.score
         }))
@@ -20,7 +20,7 @@ export async function importFromJsonString(json: string) {
       stdQuestions.push(stdQuestion);
     }
 
-    let srcQuestion: SrcQuestion = {
+    let srcQuestion: InsertingSrcQuestion = {
       content: item.content,
       stdQuestions: stdQuestions
     }
@@ -30,11 +30,11 @@ export async function importFromJsonString(json: string) {
   return await importSrcQuestions(srcQuestions);
 }
 
-async function importSrcQuestion(srcQuestion: SrcQuestion) {
+async function importSrcQuestion(srcQuestion: InsertingSrcQuestion) {
   return await importSrcQuestions([srcQuestion]);
 }
 
-async function importSrcQuestions(srcQuestions: SrcQuestion[]) {
+async function importSrcQuestions(srcQuestions: InsertingSrcQuestion[]) {
   return await withConnection(async (conn: mysql.Connection) => {
     try {
       await conn.beginTransaction();

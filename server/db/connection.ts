@@ -22,6 +22,10 @@ async function closeConnection(): Promise<void> {
     }
 }
 
-export function withConnection<T>(callback: (conn: mysql.Connection) => Promise<T>): Promise<T> {
-    return getConnection().then(callback).finally(closeConnection);
+export async function withConnection<T>(callback: (conn: mysql.Connection) => Promise<T>): Promise<T> {
+    const conn: mysql.Connection = await getConnection();
+
+    const result = await callback(conn);
+    await closeConnection();
+    return result;
 }

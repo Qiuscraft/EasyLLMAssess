@@ -3,6 +3,7 @@ import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type {SrcQuestion, StdQuestion} from "~/server/types/mysql";
 import {UButton} from "#components";
+import CreateDatasetButton from "~/pages/components/CreateDatasetButton.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -91,16 +92,24 @@ const columns: TableColumn<StdQuestion>[] = [
 const table = useTemplateRef('table')
 
 const viewingRow = ref<StdQuestion | null>(null)
-const rowSelection = ref({ })
+const rowSelection = ref<Record<number, boolean>>({ })
 
 const columnPinning = ref({
   left: [],
   right: ['view']
 })
+
+const selected_id_list = computed(() => {
+  return Object.keys(rowSelection.value)
+    .filter(id => rowSelection.value[Number(id)])
+    .map(Number);
+})
 </script>
 
 <template>
   <div class="flex-1 w-full">
+    <CreateDatasetButton :id_list="selected_id_list" />
+
     <UTable
         sticky
         ref="table"
@@ -109,7 +118,7 @@ const columnPinning = ref({
         :columns="columns"
         :loading="loading"
         v-model:column-pinning="columnPinning"
-        class="flex-1 max-h-[700px]"
+        class="flex-1 max-h-[500px]"
     />
 
     <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Standard Question #${viewingRow.id}`">

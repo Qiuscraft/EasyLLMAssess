@@ -5,12 +5,15 @@ const loading = ref(false)
 
 const toast = useToast()
 
-function handleFileChange(event) {
-  const file = event.target.files[0]
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target?.files?.[0]
   if (file) {
     const reader = new FileReader()
-    reader.onload = (e) => {
-      fileContent.value = e.target.result
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      if (e.target) {
+        fileContent.value = e.target.result as string
+      }
     }
     reader.readAsText(file)
   }
@@ -25,12 +28,12 @@ async function handleSubmit() {
   loading.value = false
   if (response.success) {
     toast.add({
-      title: "数据导入成功！",
+      title: "Data Imported Successfully",
       color: 'success'
     })
   } else {
     toast.add({
-      title: "数据导入失败，请检查文件格式。",
+      title: "Data Import Failed. Please check the file format.",
       description: response.message,
       color: 'error'
     })
@@ -41,16 +44,16 @@ async function handleSubmit() {
 
 </script>
 <template>
-  <UModal v-model:open="open" title="导入数据" description="上传你的数据json文件（支持拖拽）。" :ui="{ footer: 'justify-end' }">
-    <UButton label="导入数据" color="neutral" variant="subtle" />
+  <UModal v-model:open="open" title="Import Data" description="Upload your data json file. (Draggable)" :ui="{ footer: 'justify-end' }">
+    <UButton label="Import Data" color="neutral" variant="subtle" />
 
     <template #body>
       <UInput type="file" @change="handleFileChange" />
     </template>
 
     <template #footer>
-      <UButton label="取消" color="neutral" variant="outline" @click="open = false" />
-      <UButton label="确认" color="neutral" :disabled="!fileContent || loading" :loading="loading" @click="handleSubmit" />
+      <UButton label="Cancel" color="neutral" variant="outline" @click="open = false" />
+      <UButton label="Submit" color="neutral" :disabled="!fileContent || loading" :loading="loading" @click="handleSubmit" />
     </template>
   </UModal>
 </template>

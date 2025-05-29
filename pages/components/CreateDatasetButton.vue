@@ -27,7 +27,7 @@ async function handleSubmit() {
   } catch (error) {
     toast.add({
       title: "Dataset creation failed",
-      description: response.message,
+      description: (error as Error).message,
       color: 'error'
     })
   }

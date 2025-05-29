@@ -1,9 +1,18 @@
-<template>
-  <ImportButton />
-  <DataCard />
-</template>
-
 <script setup lang="ts">
-import ImportButton from "~/pages/components/ImportButton.vue";
-import DataCard from "~/pages/components/DataCard.vue";
+const links = ref([
+  {
+    label: 'Get started',
+    color: 'neutral',
+    to: '/source-questions',
+  },
+])
 </script>
+
+<template>
+  <UPageCTA
+      title="Welcome to EasyLLMAssess."
+      description="Start to eval your llms' performance right now!"
+      variant="soft"
+      :links="links"
+  />
+</template>

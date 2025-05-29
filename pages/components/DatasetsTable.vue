@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type {Dataset} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
+import {h} from "vue";
+import {UButton} from "#components";
+import StdQuestionsCard from "~/pages/components/StdQuestionsCard.vue";
 
 const query = ref(
   {
@@ -42,6 +45,8 @@ onMounted(async () => {
   await fetchData();
 })
 
+const viewingRow = ref<Dataset | null>(null)
+
 const columns: TableColumn<Dataset>[] = [
   {
     accessorKey: 'id',
@@ -63,9 +68,41 @@ const columns: TableColumn<Dataset>[] = [
     header: 'Created At',
     cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleString(),
   },
+  {
+    id: 'view',
+    header: 'Actions',
+    cell: ({ row }) => h(UButton, {
+      label: 'View',
+      color: 'neutral',
+      variant: 'subtle',
+      onClick: () => viewingRow.value = row.original
+    })
+  },
 ]
+
+const columnPinning = ref({
+  left: [],
+  right: ['view']
+})
 </script>
 
 <template>
-  <UTable :data="datasets" :columns="columns" :loading="loading" class="flex-1" />
+  <UTable
+    :data="datasets"
+    :columns="columns"
+    :loading="loading"
+    class="flex-1 max-h-[500px]"
+    v-model:column-pinning="columnPinning"
+  />
+
+  <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Dataset #${viewingRow.id}`">
+    <template #body>
+      <UPageCard
+          :title="`${viewingRow.name} - ${viewingRow.version}`"
+          :description="`Created At: ${viewingRow.created_at}`"
+      >
+        <StdQuestionsCard :std_questions="viewingRow.questions" />
+      </UPageCard>
+    </template>
+  </UModal>
 </template>

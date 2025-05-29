@@ -4,7 +4,6 @@ import type { TableColumn } from '@nuxt/ui'
 import type {SrcQuestion, StdQuestion} from "~/server/types/mysql";
 
 const UCheckbox = resolveComponent('UCheckbox')
-const UBadge = resolveComponent('UBadge')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);

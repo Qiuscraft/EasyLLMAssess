@@ -80,8 +80,8 @@ const columnPinning = ref({
                 :description="`Standard Answer: ${sq.answer}`"
             >
               <UTable
-                :data="sq.points"
-                :columns="[
+                  :data="sq.points"
+                  :columns="[
                   {
                     accessorKey: 'content',
                     header: 'Point',

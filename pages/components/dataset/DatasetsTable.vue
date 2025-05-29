@@ -5,6 +5,9 @@ import {h} from "vue";
 import {UButton} from "#components";
 import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
 
+const page = ref(1)
+const page_size = ref(5)
+
 const query = ref(
   {
     id: undefined,
@@ -12,8 +15,8 @@ const query = ref(
     version: undefined,
     order_field: 'created_at',
     order_by: 'desc',
-    page: 1,
-    page_size: 10
+    page: page,
+    page_size: page_size
   }
 )
 
@@ -84,6 +87,11 @@ const columnPinning = ref({
   left: [],
   right: ['view']
 })
+
+async function handlePageChange(newPage: number) {
+  page.value = newPage;
+  await fetchData();
+}
 </script>
 
 <template>
@@ -94,6 +102,14 @@ const columnPinning = ref({
     class="flex-1 max-h-[500px]"
     v-model:column-pinning="columnPinning"
   />
+
+  <div class="flex justify-center border-t border-default pt-4">
+    <UPagination
+        :items-per-page="page_size"
+        :total="total"
+        @update:page="handlePageChange"
+    />
+  </div>
 
   <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Dataset #${viewingRow.id}`">
     <template #body>

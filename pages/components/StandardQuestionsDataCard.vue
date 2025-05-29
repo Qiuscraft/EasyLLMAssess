@@ -2,6 +2,7 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type {SrcQuestion, StdQuestion} from "~/server/types/mysql";
+import {UButton} from "#components";
 
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -75,16 +76,63 @@ const columns: TableColumn<StdQuestion>[] = [
     header: 'Answer',
     cell: ({ row }) => h('div', { innerHTML: row.getValue('answer') }),
   },
+  {
+    id: 'view',
+    header: 'Actions',
+    cell: ({ row }) => h(UButton, {
+      label: 'View',
+      color: 'neutral',
+      variant: 'subtle',
+      onClick: () => viewingRow.value = row.original
+    })
+  },
 ]
 
 const table = useTemplateRef('table')
 
+const viewingRow = ref<StdQuestion | null>(null)
 const rowSelection = ref({ })
+
+const columnPinning = ref({
+  left: [],
+  right: ['view']
+})
 </script>
 
 <template>
   <div class="flex-1 w-full">
-    <UTable ref="table" v-model:row-selection="rowSelection" :data="data" :columns="columns" :loading="loading" />
+    <UTable
+        sticky
+        ref="table"
+        v-model:row-selection="rowSelection"
+        :data="data"
+        :columns="columns"
+        :loading="loading"
+        v-model:column-pinning="columnPinning"
+        class="flex-1 max-h-[700px]"
+    />
+
+    <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Standard Question #${viewingRow.id}`">
+      <template #body>
+        <UPageCard class="p-4 space-y-4">
+          <UPageCard
+              :title="`Standard Question: ${viewingRow.content}`"
+              :description="`Standard Answer: ${viewingRow.answer}`"
+          >
+            <UTable
+                :data="viewingRow.points"
+                :columns="[
+                { accessorKey: 'content', header: 'Point' },
+                { accessorKey: 'score', header: 'Score' }
+              ]"
+            />
+          </UPageCard>
+        </UPageCard>
+      </template>
+      <template #footer>
+        <UButton label="Close" color="gray" @click="viewingRow = null" />
+      </template>
+    </UModal>
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
       {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of

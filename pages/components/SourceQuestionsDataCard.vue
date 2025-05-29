@@ -61,11 +61,12 @@ const columnPinning = ref({
 
 <template>
   <UTable
+    sticky
     :loading="loading"
     :data="data"
     :columns="columns"
     v-model:column-pinning="columnPinning"
-    class="max-h-[700px] overflow-auto"
+    class="flex-1 max-h-[700px]"
   >
     <template #view-cell="{ row }">
       <UModal fullscreen :title="`Source Question #${row.original.id}`">

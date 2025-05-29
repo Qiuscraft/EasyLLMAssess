@@ -46,17 +46,17 @@ const columns: TableColumn<Dataset>[] = [
   {
     accessorKey: 'id',
     header: 'ID',
-    cell: ({ row }) => `#${row.getValue('id')}`
+    cell: ({ row }) => `${row.getValue('id')}`
   },
   {
     accessorKey: 'name',
     header: 'Name',
-    cell: ({ row }) => `#${row.getValue('name')}`,
+    cell: ({ row }) => `${row.getValue('name')}`,
   },
   {
     accessorKey: 'version',
     header: 'Version',
-    cell: ({ row }) => `#${row.getValue('version')}`,
+    cell: ({ row }) => `${row.getValue('version')}`,
   },
   {
     accessorKey: 'created_at',

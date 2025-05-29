@@ -1,12 +1,12 @@
 <script setup lang="ts">
 
-import DataCard from "~/pages/components/DataCard.vue";
+import SourceQuestionsDataCard from "~/pages/components/SourceQuestionsDataCard.vue";
 import ImportButton from "~/pages/components/ImportButton.vue";
 </script>
 
 <template>
   <ImportButton />
-  <DataCard />
+  <SourceQuestionsDataCard />
 </template>
 
 <style scoped>

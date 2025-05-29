@@ -2,7 +2,7 @@
 import type {Dataset} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
-import {UButton} from "#components";
+import {UButton, UInput} from "#components";
 import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
 
 const page = ref(1)
@@ -10,9 +10,7 @@ const page_size = ref(5)
 
 const query = ref(
   {
-    id: undefined,
-    name: undefined,
-    version: undefined,
+    name: '',
     order_field: 'created_at',
     order_by: 'desc',
     page: page,
@@ -26,6 +24,7 @@ const total = ref(0)
 
 async function fetchData() {
   loading.value = true;
+  datasets.value = [];
   try {
     const response = await $fetch('/api/v1/dataset', {
       method: 'GET',
@@ -49,26 +48,87 @@ onMounted(async () => {
 })
 
 const viewingRow = ref<Dataset | null>(null)
+const searchName = ref('')
 
 const columns: TableColumn<Dataset>[] = [
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'ID',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => `${row.getValue('id')}`
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: ({  }) => {
+      return h(UInput, {
+        modelValue: searchName.value,
+        'onUpdate:modelValue': (newValue: string) => {
+          searchName.value = newValue; // 更新绑定的值
+        },
+        placeholder: "",
+        ui: { base: "peer" },
+      }, [
+        h("label", {
+          class: "pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal",
+        }, [
+          h("span", { class: "inline-flex bg-default px-1" }, "Name")
+        ])
+      ])
+    },
     cell: ({ row }) => `${row.getValue('name')}`,
   },
   {
     accessorKey: 'version',
-    header: 'Version',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Version',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => `${row.getValue('version')}`,
   },
   {
     accessorKey: 'created_at',
-    header: 'Created At',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Created At',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleString(),
   },
   {
@@ -82,6 +142,24 @@ const columns: TableColumn<Dataset>[] = [
     })
   },
 ]
+
+const sorting = ref([
+  {
+    id: 'created_at',
+    desc: true
+  }
+])
+
+watch(sorting, async () => {
+  query.value.order_field = sorting.value[0]?.id || 'created_at';
+  query.value.order_by = sorting.value[0]?.desc ? 'desc' : 'asc';
+  await fetchData();
+}, { deep: true });
+
+watch(searchName, async () => {
+  query.value.name = searchName.value || '';
+  await fetchData();
+}, { deep: true });
 
 const columnPinning = ref({
   left: [],
@@ -101,6 +179,7 @@ async function handlePageChange(newPage: number) {
     :loading="loading"
     class="flex-1 max-h-[500px]"
     v-model:column-pinning="columnPinning"
+    v-model:sorting="sorting"
   />
 
   <div class="flex justify-center border-t border-default pt-4">

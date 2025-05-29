@@ -60,18 +60,24 @@ const columns: TableColumn<SrcQuestion>[] = [
   }
 ]
 
-async function fetchData(desc: boolean = true) {
+const total = ref(0);
+
+async function fetchData() {
   data.value = [];
+  total.value = 0;
   loading.value = true;
   try {
     const response = await $fetch('/api/v1/src-question', {
       method: 'GET',
       query: {
-        order_by: desc ? 'desc' : 'asc',
+        order_by: sorting.value[0].desc ? 'desc' : 'asc',
+        page: page.value,
+        page_size: page_size.value,
       }
     });
 
     data.value = response["src-questions"];
+    total.value = response.total;
   } catch (error) {
     useToast().add({
       title: "Data Load Error",
@@ -81,6 +87,14 @@ async function fetchData(desc: boolean = true) {
   } finally {
     loading.value = false;
   }
+}
+
+const page = ref(1);
+const page_size = ref(5);
+
+async function handlePageChange(newPage: number) {
+  page.value = newPage;
+  await fetchData();
 }
 
 onMounted(async () => {
@@ -113,6 +127,11 @@ const columnPinning = ref({
       </UModal>
     </template>
   </UTable>
+  <UPagination
+      :items-per-page="page_size"
+      :total="total"
+      @update:page="handlePageChange"
+  />
 </template>
 
 <style scoped>

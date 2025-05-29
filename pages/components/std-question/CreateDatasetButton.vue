@@ -41,7 +41,7 @@ const version = ref('1.0')
 
 </script>
 <template>
-  <UModal v-model:open="open" title="Create Dataset" :ui="{ footer: 'justify-end' }" >
+  <UModal v-model:open="open" title="Create Dataset" :ui="{ footer: 'justify-end' }" description="Create Dataset with Selected Questions" >
     <UButton label="Create Dataset with Selected Questions" color="neutral" variant="subtle" :disabled="props.id_list.length === 0" />
 
     <template #body>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const props = defineProps(['id_list'])
+const emit = defineEmits(['submit'])
 
 const open = ref(false)
 const loading = ref(false)
@@ -24,6 +25,7 @@ async function handleSubmit() {
     name.value = '';
     version.value = '1.0';
     open.value = false;
+    emit('submit');
   } catch (error) {
     toast.add({
       title: "Dataset creation failed",

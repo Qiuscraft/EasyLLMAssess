@@ -104,11 +104,15 @@ const selected_id_list = computed(() => {
     .filter(id => rowSelection.value[Number(id)])
     .map(Number);
 })
+
+const handleSubmit = () => {
+  rowSelection.value = {};
+}
 </script>
 
 <template>
   <div class="flex-1 w-full">
-    <CreateDatasetButton :id_list="selected_id_list" />
+    <CreateDatasetButton :id_list="selected_id_list" @submit="handleSubmit" />
 
     <UTable
         sticky

@@ -74,7 +74,7 @@ const columnPinning = ref({
         <UButton label="View" color="neutral" variant="subtle" />
         <template #body>
           <div v-html="row.original.content"></div>
-          <StdQuestionsCard :std_questions="row" />
+          <StdQuestionsCard :std_questions="row.original.stdQuestions" />
         </template>
       </UModal>
     </template>

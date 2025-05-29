@@ -1,11 +1,12 @@
 <script setup lang="ts">
 const props = defineProps(['std_questions'])
+console.log('props', props)
 </script>
 
 <template>
   <UPageCard title="Standard Questions">
     <UPageCard
-        v-for="sq in props.std_questions.original.stdQuestions"
+        v-for="sq in props.std_questions"
         :title="`Standard Question #${sq.id}: ${sq.content}`"
         :description="`Standard Answer: ${sq.answer}`"
     >

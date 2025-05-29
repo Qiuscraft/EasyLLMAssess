@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
+import StdQuestionsCard from "~/pages/components/StdQuestionsCard.vue";
 
 const data = ref<SrcQuestion[]>([]);
 const loading = ref(true);
@@ -73,29 +74,7 @@ const columnPinning = ref({
         <UButton label="View" color="neutral" variant="subtle" />
         <template #body>
           <div v-html="row.original.content"></div>
-          <UPageCard title="Standard Questions">
-            <UPageCard
-                v-for="sq in row.original.stdQuestions"
-                :title="`Standard Question: ${sq.content}`"
-                :description="`Standard Answer: ${sq.answer}`"
-            >
-              <UTable
-                  :data="sq.points"
-                  :columns="[
-                  {
-                    accessorKey: 'content',
-                    header: 'Point',
-                    cell: ({ row }) => row.getValue('content')
-                  },
-                  {
-                    accessorKey: 'score',
-                    header: 'Score',
-                    cell: ({ row }) => row.getValue('score')
-                  }
-                ]"
-              />
-            </UPageCard>
-          </UPageCard>
+          <StdQuestionsCard :std_questions="row" />
         </template>
       </UModal>
     </template>

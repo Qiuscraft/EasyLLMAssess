@@ -60,7 +60,13 @@ const columnPinning = ref({
 </script>
 
 <template>
-  <UTable :loading="loading" :data="data" :columns="columns" v-model:column-pinning="columnPinning">
+  <UTable
+    :loading="loading"
+    :data="data"
+    :columns="columns"
+    v-model:column-pinning="columnPinning"
+    class="max-h-[700px] overflow-auto"
+  >
     <template #view-cell="{ row }">
       <UModal fullscreen :title="`Source Question #${row.original.id}`">
         <UButton label="View" color="neutral" variant="subtle" />

@@ -67,5 +67,5 @@ const columns: TableColumn<Dataset>[] = [
 </script>
 
 <template>
-  <UTable :data="datasets" :columns="columns" class="flex-1" />
+  <UTable :data="datasets" :columns="columns" :loading="loading" class="flex-1" />
 </template>

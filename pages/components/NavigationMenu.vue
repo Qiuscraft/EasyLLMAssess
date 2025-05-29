@@ -3,6 +3,11 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const items = ref<NavigationMenuItem[]>([
   {
+    label: 'Homepage',
+    icon: 'i-lucide-house',
+    to: '/',
+  },
+  {
     label: 'Source Questions',
     icon: 'i-lucide-message-circle-question',
     to: '/source-questions',

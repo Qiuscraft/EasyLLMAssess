@@ -3,7 +3,7 @@ import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
 import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
 import {h} from "vue";
-import {UButton} from "#components";
+import {UButton, UInput} from "#components";
 
 const data = ref<SrcQuestion[]>([]);
 const loading = ref(true);
@@ -16,8 +16,10 @@ const sorting = ref([
 ])
 
 watch(sorting, async () => {
-  await fetchData(sorting.value[0].desc);
+  await fetchData();
 }, { deep: true });
+
+const searchName = ref('');
 
 const columns: TableColumn<SrcQuestion>[] = [
   {
@@ -42,7 +44,22 @@ const columns: TableColumn<SrcQuestion>[] = [
   },
   {
     accessorKey: 'content',
-    header: 'Content',
+    header: ({  }) => {
+      return h(UInput, {
+        modelValue: searchName.value,
+        'onUpdate:modelValue': (newValue: string) => {
+          searchName.value = newValue; // 更新绑定的值
+        },
+        placeholder: "",
+        ui: { base: "peer" },
+      }, [
+        h("label", {
+          class: "pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal",
+        }, [
+          h("span", { class: "inline-flex bg-default px-1" }, "Content")
+        ])
+      ])
+    },
     cell: ({ row }: { row: any }) => h('div', {
       innerHTML: row.getValue('content'),
       style: {
@@ -60,6 +77,10 @@ const columns: TableColumn<SrcQuestion>[] = [
   }
 ]
 
+watch(searchName, async () => {
+  await fetchData();
+}, { deep: true });
+
 const total = ref(0);
 
 async function fetchData() {
@@ -73,6 +94,7 @@ async function fetchData() {
         order_by: sorting.value[0].desc ? 'desc' : 'asc',
         page: page.value,
         page_size: page_size.value,
+        content: searchName.value,
       }
     });
 

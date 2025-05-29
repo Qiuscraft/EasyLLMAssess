@@ -3,6 +3,7 @@ import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
 
 const data = ref<SrcQuestion[]>([]);
+const loading = ref(true);
 
 const columns: TableColumn<SrcQuestion>[] = [
   {
@@ -22,6 +23,7 @@ const columns: TableColumn<SrcQuestion>[] = [
 ]
 
 async function fetchData() {
+  loading.value = true;
   try {
     const response = await $fetch('/api/v1/data', {
       method: 'GET',
@@ -42,6 +44,8 @@ async function fetchData() {
       description: error instanceof Error ? error.message : "未知错误",
       color: 'error'
     });
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -56,7 +60,7 @@ const columnPinning = ref({
 </script>
 
 <template>
-  <UTable :data="data" :columns="columns" v-model:column-pinning="columnPinning">
+  <UTable :loading="loading" :data="data" :columns="columns" v-model:column-pinning="columnPinning">
     <template #view-cell="{ row }">
       <UModal fullscreen :title="`Source Question #${row.original.id}`">
         <UButton label="View" color="neutral" variant="subtle" />

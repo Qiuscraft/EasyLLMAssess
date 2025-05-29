@@ -12,6 +12,11 @@ const items = ref<NavigationMenuItem[]>([
     icon: 'i-lucide-mail-question',
     to: '/standard-questions',
   },
+  {
+    label: 'Datasets',
+    icon: 'i-lucide-database',
+    to: '/datasets',
+  },
 ])
 </script>
 

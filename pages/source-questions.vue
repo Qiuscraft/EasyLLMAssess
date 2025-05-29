@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import SourceQuestionsDataCard from "~/pages/components/SourceQuestionsDataCard.vue";
-import ImportButton from "~/pages/components/ImportButton.vue";
+import SourceQuestionsDataCard from "~/pages/components/source-question/SourceQuestionsDataCard.vue";
+import ImportButton from "~/pages/components/source-question/ImportButton.vue";
 </script>
 
 <template>

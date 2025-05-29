@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
-import StdQuestionsCard from "~/pages/components/StdQuestionsCard.vue";
+import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
 
 const data = ref<SrcQuestion[]>([]);
 const loading = ref(true);

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import StandardQuestionsDataCard from "~/pages/components/StandardQuestionsDataCard.vue";
+import StandardQuestionsDataCard from "~/pages/components/std-question/StandardQuestionsDataCard.vue";
 </script>
 
 <template>

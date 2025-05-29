@@ -25,3 +25,11 @@ export interface SrcQuestion {
     content: string;
     stdQuestions: StdQuestion[]; // 标准问题数组
 }
+
+export interface Dataset {
+    id: number;
+    name: string;
+    version: string;
+    created_at: string;
+    questions: StdQuestion[];
+}

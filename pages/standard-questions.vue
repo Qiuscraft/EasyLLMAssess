@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
-import StandardQuestionsDataCard from "~/pages/components/std-question/StandardQuestionsDataCard.vue";
+import StandardQuestionsTable from "~/pages/components/std-question/StandardQuestionsTable.vue";
 </script>
 
 <template>
-  <StandardQuestionsDataCard />
+  <StandardQuestionsTable />
 </template>
 
 <style scoped>

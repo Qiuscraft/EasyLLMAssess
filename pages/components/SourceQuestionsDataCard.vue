@@ -66,7 +66,7 @@ const columnPinning = ref({
     :data="data"
     :columns="columns"
     v-model:column-pinning="columnPinning"
-    class="flex-1 max-h-[700px]"
+    class="flex-1 max-h-[600px]"
   >
     <template #view-cell="{ row }">
       <UModal fullscreen :title="`Source Question #${row.original.id}`">

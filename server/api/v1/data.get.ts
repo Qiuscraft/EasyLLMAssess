@@ -1,4 +1,4 @@
-import {getData} from "~/server/db/get";
+import {getData} from "~/server/db/data";
 
 export default defineEventHandler(async () => {
     try {

@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {SrcQuestion, StdQuestion, Point} from "~/server/types/mysql";
+import {SrcQuestion, StdQuestion, Point, SrcAnswer} from "~/server/types/mysql";
 
 export async function getSourceQuestions(
     id: number | undefined = undefined,
@@ -42,7 +42,8 @@ export async function getSourceQuestions(
             srcQuestions[row.id] = {
                 id: row.id,
                 content: row.content,
-                stdQuestions: []
+                stdQuestions: [],
+                answers: [],
             };
         }
 
@@ -86,6 +87,28 @@ export async function getSourceQuestions(
 
             if (stdQuestions[row.std_question_id]) {
                 stdQuestions[row.std_question_id].points.push(point);
+            }
+        }
+
+        // 5. get src answer
+        const [answerRows] = await conn.execute(`
+            SELECT
+                sa.id, sa.content, sa.src_question_id
+            FROM
+                src_answer sa
+                    JOIN
+                src_question src ON sa.src_question_id = src.id
+        `);
+
+        for (const row of answerRows as any[]) {
+            const answer: SrcAnswer = {
+                id: row.id,
+                content: row.content,
+            };
+
+            // 将标准问题添加到对应的源问题中
+            if (srcQuestions[row.src_question_id]) {
+                srcQuestions[row.src_question_id].answers.push(answer);
             }
         }
 

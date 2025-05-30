@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const props = defineProps(['std_questions'])
-console.log('props', props)
 </script>
 
 <template>

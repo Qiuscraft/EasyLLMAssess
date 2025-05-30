@@ -17,6 +17,11 @@ export interface StdQuestion {
     points: Point[];   // 评分点数组
 }
 
+export interface SrcAnswer {
+    id: number;
+    content: string;
+}
+
 /**
  * 源问题接口 - 对应数据库中的 src_question 表
  */
@@ -24,6 +29,7 @@ export interface SrcQuestion {
     id: number;
     content: string;
     stdQuestions: StdQuestion[]; // 标准问题数组
+    answers: SrcAnswer[];
 }
 
 export interface Dataset {

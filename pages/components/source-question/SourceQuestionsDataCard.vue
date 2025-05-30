@@ -2,6 +2,7 @@
 import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
 import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
+import SrcAnswerCard from "~/pages/components/source-question/SrcAnswerCard.vue";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
 
@@ -160,6 +161,7 @@ const viewing = ref<SrcQuestion | null>(null);
     <UButton label="View" color="neutral" variant="subtle" />
     <template #body>
       <div v-html="viewing.content"></div>
+      <SrcAnswerCard :answers="viewing.answers" />
       <StdQuestionsCard :std_questions="viewing.stdQuestions" />
     </template>
   </UModal>

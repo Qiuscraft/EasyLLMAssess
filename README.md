@@ -38,3 +38,8 @@ pnpm dev
 4. 标准问题存在，标准答案不一定存在
 5. 标准问题：分类、标签
 6. 记录众包回答的质量(Optional)
+
+## TODO
+
+1. json src question change
+2. mysql add src answer, src question change

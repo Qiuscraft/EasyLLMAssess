@@ -20,5 +20,6 @@ export interface InsertingStdQuestion {
  */
 export interface InsertingSrcQuestion {
     content: string;         // 源问题内容
-    stdQuestions: InsertingStdQuestion[]; // 标准问题数组
+    std_questions: InsertingStdQuestion[]; // 标准问题数组
+    answers: string[];
 }

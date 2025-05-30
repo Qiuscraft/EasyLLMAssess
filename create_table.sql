@@ -3,6 +3,12 @@ CREATE TABLE src_question (
     content TEXT NOT NULL
 );
 
+CREATE TABLE src_answer (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content TEXT NOT NULL,
+    src_question_id INT NOT NULL REFERENCES src_question(id)
+);
+
 CREATE TABLE std_question (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,

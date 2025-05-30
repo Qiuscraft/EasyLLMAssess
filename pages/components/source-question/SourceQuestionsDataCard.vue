@@ -74,6 +74,12 @@ const columns: TableColumn<SrcQuestion>[] = [
   {
     id: 'view',
     header: 'Actions',
+    cell: ({ row }) => h(UButton, {
+      label: 'View',
+      color: 'neutral',
+      variant: 'subtle',
+      onClick: () => viewing.value = row.original
+    }),
   }
 ]
 
@@ -131,6 +137,8 @@ const columnPinning = ref({
 defineExpose({
   fetchData
 });
+
+const viewing = ref<SrcQuestion | null>(null);
 </script>
 
 <template>
@@ -142,22 +150,19 @@ defineExpose({
     v-model:column-pinning="columnPinning"
     class="flex-1 max-h-[600px]"
     v-model:sorting="sorting"
-  >
-    <template #view-cell="{ row }">
-      <UModal fullscreen :title="`Source Question #${row.original.id}`">
-        <UButton label="View" color="neutral" variant="subtle" />
-        <template #body>
-          <div v-html="row.original.content"></div>
-          <StdQuestionsCard :std_questions="row.original.stdQuestions" />
-        </template>
-      </UModal>
-    </template>
-  </UTable>
+  />
   <UPagination
       :items-per-page="page_size"
       :total="total"
       @update:page="handlePageChange"
   />
+  <UModal v-if="viewing" v-model:open="viewing" fullscreen :title="`Source Question #${viewing.id}`">
+    <UButton label="View" color="neutral" variant="subtle" />
+    <template #body>
+      <div v-html="viewing.content"></div>
+      <StdQuestionsCard :std_questions="viewing.stdQuestions" />
+    </template>
+  </UModal>
 </template>
 
 <style scoped>

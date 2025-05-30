@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const emit = defineEmits(['import'])
 const open = ref(false)
 const fileContent = ref('')
 const loading = ref(false)
@@ -40,6 +41,7 @@ async function handleSubmit() {
   }
   fileContent.value = '';
   open.value = false;
+  emit('import', fileContent.value);
 }
 
 </script>

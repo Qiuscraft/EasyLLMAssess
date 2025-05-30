@@ -127,6 +127,10 @@ const columnPinning = ref({
   left: [],
   right: ['view']
 })
+
+defineExpose({
+  fetchData
+});
 </script>
 
 <template>

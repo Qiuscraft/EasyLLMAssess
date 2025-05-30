@@ -20,9 +20,12 @@ export async function importFromJsonString(json: string) {
       stdQuestions.push(stdQuestion);
     }
 
+    const answers: string[] = item.answers || [];
+
     let srcQuestion: InsertingSrcQuestion = {
       content: item.content,
-      std_questions: stdQuestions
+      std_questions: stdQuestions,
+      answers: answers,
     }
     srcQuestions.push(srcQuestion);
   }
@@ -66,6 +69,14 @@ async function importSrcQuestions(srcQuestions: InsertingSrcQuestion[]) {
                 [stdQuestionId, pointId]
             );
           }
+        }
+
+        // 插入源问题的答案
+        for (const answer of srcQuestion.answers) {
+          await conn.execute(
+            'INSERT INTO src_answer (src_question_id, content) VALUES (?, ?)',
+            [srcId, answer]
+          );
         }
       }
       await conn.commit();

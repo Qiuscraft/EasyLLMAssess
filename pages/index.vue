@@ -11,7 +11,7 @@ const links = ref([
 <template>
   <UPageCTA
       title="Welcome to EasyLLMAssess."
-      description="Start to eval your llms' performance right now!"
+      description="Start to eval your LLMs' performance right now!"
       variant="soft"
       :links="links"
   />

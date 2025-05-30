@@ -184,6 +184,7 @@ async function handlePageChange(newPage: number) {
 
   <div class="flex justify-center border-t border-default pt-4">
     <UPagination
+        show-edges
         :items-per-page="page_size"
         :total="total"
         @update:page="handlePageChange"

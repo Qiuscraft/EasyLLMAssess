@@ -153,6 +153,7 @@ const viewing = ref<SrcQuestion | null>(null);
     v-model:sorting="sorting"
   />
   <UPagination
+      show-edges
       :items-per-page="page_size"
       :total="total"
       @update:page="handlePageChange"

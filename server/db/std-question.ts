@@ -9,12 +9,21 @@ export async function getStandardQuestions(
     order_by: string = 'desc',
     page: number = 1,
     page_size: number = 5
-): Promise<{ total: number; std_questions: StdQuestion[] }> {
+): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
         // 将 undefined 转换为 null
         const idParam = id === undefined ? null : id;
 
-        // 1. 获取总数
+        // 1. 获取筛选前的总数
+        const [totalNoFilterRows] = await conn.execute(
+            `
+                SELECT COUNT(*) as total
+                FROM std_question
+            `
+        );
+        const total_no_filter = (totalNoFilterRows as any[])[0].total;
+
+        // 2. 获取筛选后的总数
         const [totalRows] = await conn.execute(
             `
                 SELECT COUNT(*) as total
@@ -25,7 +34,7 @@ export async function getStandardQuestions(
         );
         const total = (totalRows as any[])[0].total;
 
-        // 2. 获取所有标准问题，支持筛选和排序
+        // 3. 获取所有标准问题，支持筛选和排序
         const [stdRows] = await conn.execute(
             `
                 SELECT id, content, answer
@@ -54,6 +63,7 @@ export async function getStandardQuestions(
         if (questionIds.length === 0) {
             return {
                 total: total,
+                total_no_filter: total_no_filter,
                 "std_questions": [],
             };
         }
@@ -81,6 +91,7 @@ export async function getStandardQuestions(
 
         return {
             total: total,
+            total_no_filter: total_no_filter,
             "std_questions": Object.values(stdQuestions),
         };
     });

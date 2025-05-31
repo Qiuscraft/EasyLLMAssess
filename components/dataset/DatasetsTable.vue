@@ -3,7 +3,7 @@ import type {Dataset} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
-import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
+import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 
 const page = ref(1)
 const page_size = ref(5)

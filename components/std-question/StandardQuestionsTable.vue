@@ -3,7 +3,7 @@ import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type {SrcQuestion, StdQuestion} from "~/server/types/mysql";
 import {UButton} from "#components";
-import CreateDatasetButton from "~/pages/components/std-question/CreateDatasetButton.vue";
+import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
 

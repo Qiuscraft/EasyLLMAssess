@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
-import StdQuestionsCard from "~/pages/components/std-question/StdQuestionsCard.vue";
-import SrcAnswerCard from "~/pages/components/source-question/SrcAnswerCard.vue";
+import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
+import SrcAnswerCard from "~/components/source-question/SrcAnswerCard.vue";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
 

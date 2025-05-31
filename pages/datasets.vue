@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import DatasetsTable from "~/pages/components/dataset/DatasetsTable.vue";
+import DatasetsTable from "~/components/dataset/DatasetsTable.vue";
 </script>
 
 <template>

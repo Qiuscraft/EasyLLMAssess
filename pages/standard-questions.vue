@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import StandardQuestionsTable from "~/pages/components/std-question/StandardQuestionsTable.vue";
+import StandardQuestionsTable from "~/components/std-question/StandardQuestionsTable.vue";
 </script>
 
 <template>

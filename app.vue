@@ -6,5 +6,5 @@
   </UApp>
 </template>
 <script setup lang="ts">
-import NavigationMenu from "~/pages/components/menu/NavigationMenu.vue";
+import NavigationMenu from "~/components/menu/NavigationMenu.vue";
 </script>

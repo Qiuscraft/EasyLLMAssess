@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type {SrcQuestion, StdQuestion} from "~/server/types/mysql";
+import type {StdQuestion} from "~/server/types/mysql";
 import {UButton} from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 

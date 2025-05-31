@@ -9,25 +9,17 @@ const UCheckbox = resolveComponent('UCheckbox')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
+const total = ref(0);
 
 async function fetchData() {
   loading.value = true;
   try {
-    const response = await $fetch('/api/v1/data', {
+    const response = await $fetch('/api/v1/std-question', {
       method: 'GET',
     });
 
-    if (response.success && response.data) {
-      data.value = [];
-      const srcQuestions: SrcQuestion[] = response.data;
-      data.value = srcQuestions.flatMap(srcQuestion => srcQuestion.stdQuestions);
-    } else {
-      useToast().add({
-        title: "Data Load Failed",
-        description: response.message,
-        color: 'error'
-      });
-    }
+    data.value = response.std_questions;
+    total.value = response.total || 0;
   } catch (error) {
     useToast().add({
       title: "Data Load Failed",
@@ -149,7 +141,7 @@ const handleSubmit = () => {
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
       {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-      {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
+      {{ total || 0 }} row(s) selected.
     </div>
   </div>
 </template>

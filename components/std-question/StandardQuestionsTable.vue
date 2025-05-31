@@ -10,16 +10,21 @@ const UCheckbox = resolveComponent('UCheckbox')
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
 const total = ref(0);
+const totalNoFilter = ref(0);
 
 async function fetchData() {
   loading.value = true;
   try {
     const response = await $fetch('/api/v1/std-question', {
       method: 'GET',
+      params: {
+        page_size: 32767,
+      }
     });
 
     data.value = response.std_questions;
     total.value = response.total || 0;
+    totalNoFilter.value = response.total_no_filter || 0;
   } catch (error) {
     useToast().add({
       title: "Data Load Failed",
@@ -140,8 +145,7 @@ const handleSubmit = () => {
     </UModal>
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
-      {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-      {{ total || 0 }} row(s) selected.
+      {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} / {{ totalNoFilter }} row(s) selected.
     </div>
   </div>
 </template>

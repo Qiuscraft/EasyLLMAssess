@@ -14,6 +14,7 @@ const totalNoFilter = ref(0);
 
 const sort_by = ref('desc')
 const content = ref('')
+const answer = ref('')
 
 async function fetchData() {
   loading.value = true;
@@ -24,6 +25,7 @@ async function fetchData() {
         page_size: 32767,
         sort_by: sort_by.value,
         content: content.value,
+        answer: answer.value,
       }
     });
 
@@ -108,7 +110,22 @@ const columns: TableColumn<StdQuestion>[] = [
   },
   {
     accessorKey: 'answer',
-    header: 'Answer',
+    header: ({  }) => {
+      return h(UInput, {
+        modelValue: answer.value,
+        'onUpdate:modelValue': async (newValue: string) => {
+          answer.value = newValue; // 更新绑定的值
+        },
+        placeholder: "",
+        ui: { base: "peer" },
+      }, [
+        h("label", {
+          class: "pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal",
+        }, [
+          h("span", { class: "inline-flex bg-default px-1" }, "Answer")
+        ])
+      ])
+    },
     cell: ({ row }) => h('div', { innerHTML: row.getValue('answer') }),
   },
   {
@@ -124,6 +141,10 @@ const columns: TableColumn<StdQuestion>[] = [
 ]
 
 watch(content, async () => {
+  await fetchData();
+}, { deep: true });
+
+watch(answer, async () => {
   await fetchData();
 }, { deep: true });
 

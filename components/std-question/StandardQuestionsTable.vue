@@ -2,7 +2,7 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import type {StdQuestion} from "~/server/types/mysql";
-import {UButton} from "#components";
+import {UButton, UInput} from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
@@ -13,6 +13,7 @@ const total = ref(0);
 const totalNoFilter = ref(0);
 
 const sort_by = ref('desc')
+const content = ref('')
 
 async function fetchData() {
   loading.value = true;
@@ -22,6 +23,7 @@ async function fetchData() {
       params: {
         page_size: 32767,
         sort_by: sort_by.value,
+        content: content.value,
       }
     });
 
@@ -86,7 +88,22 @@ const columns: TableColumn<StdQuestion>[] = [
   },
   {
     accessorKey: 'content',
-    header: 'Content',
+    header: ({  }) => {
+      return h(UInput, {
+        modelValue: content.value,
+        'onUpdate:modelValue': async (newValue: string) => {
+          content.value = newValue; // 更新绑定的值
+        },
+        placeholder: "",
+        ui: { base: "peer" },
+      }, [
+        h("label", {
+          class: "pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal",
+        }, [
+          h("span", { class: "inline-flex bg-default px-1" }, "Content")
+        ])
+      ])
+    },
     cell: ({ row }) => h('div', { innerHTML: row.getValue('content') }),
   },
   {
@@ -105,6 +122,10 @@ const columns: TableColumn<StdQuestion>[] = [
     })
   },
 ]
+
+watch(content, async () => {
+  await fetchData();
+}, { deep: true });
 
 const table = useTemplateRef('table')
 

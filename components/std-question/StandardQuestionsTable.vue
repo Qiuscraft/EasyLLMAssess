@@ -41,6 +41,10 @@ async function fetchData() {
 
 onMounted(async () => {
   await fetchData();
+  // 确保表格初始状态为降序排序
+  if (table?.value?.tableApi) {
+    table.value.tableApi.getColumn('id')?.toggleSorting(true);
+  }
 });
 
 const columns: TableColumn<StdQuestion>[] = [
@@ -74,7 +78,7 @@ const columns: TableColumn<StdQuestion>[] = [
         onClick: async () => {
           sort_by.value = sort_by.value === 'desc' ? 'asc' : 'desc';
           await fetchData();
-          column.toggleSorting(sort_by.value === 'asc')
+          column.toggleSorting(sort_by.value === 'desc')
         }
       })
     },

@@ -12,6 +12,8 @@ const loading = ref(true);
 const total = ref(0);
 const totalNoFilter = ref(0);
 
+const sort_by = ref('desc')
+
 async function fetchData() {
   loading.value = true;
   try {
@@ -19,6 +21,7 @@ async function fetchData() {
       method: 'GET',
       params: {
         page_size: 32767,
+        sort_by: sort_by.value,
       }
     });
 
@@ -61,7 +64,20 @@ const columns: TableColumn<StdQuestion>[] = [
   },
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: ( { column } ) => {
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'ID',
+        icon: sort_by.value === 'desc' ? 'i-lucide-arrow-down-wide-narrow' : 'i-lucide-arrow-up-narrow-wide',
+        class: '-mx-2.5',
+        onClick: async () => {
+          sort_by.value = sort_by.value === 'desc' ? 'asc' : 'desc';
+          await fetchData();
+          column.toggleSorting(sort_by.value === 'asc')
+        }
+      })
+    },
     cell: ({ row }) => row.getValue('id'),
   },
   {

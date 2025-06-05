@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {InsertingPoint, InsertingSrcQuestion, InsertingStdQuestion} from "~/server/types/inserting";
+import {InsertingSrcQuestion, InsertingStdQuestion} from "~/server/types/inserting";
 
 export async function importFromJsonString(json: string) {
   const data = JSON.parse(json);

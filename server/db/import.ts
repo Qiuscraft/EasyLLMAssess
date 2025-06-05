@@ -11,10 +11,10 @@ export async function importFromJsonString(json: string) {
     for (const stdQuestionItem of item.std_questions) {
       let stdQuestion: InsertingStdQuestion = {
         content: stdQuestionItem.question,
-        answer: stdQuestionItem.answer,
-        points: stdQuestionItem.points.map((point: InsertingPoint) => ({
-          content: point.content,
-          score: point.score
+        answer: stdQuestionItem.answer || "", // 添加默认空字符串
+        points: (stdQuestionItem.points || []).map((point: any) => ({
+          content: point.content || "",
+          score: point.score || 0
         }))
       };
       stdQuestions.push(stdQuestion);

@@ -39,3 +39,10 @@ export interface Dataset {
     created_at: string;
     questions: StdQuestion[];
 }
+
+export interface CandidateAnswer {
+    id: number;
+    std_question_id: number; // 标准问题 ID
+    answer: string;          // 答案内容
+    username: string;       // 用户名
+}

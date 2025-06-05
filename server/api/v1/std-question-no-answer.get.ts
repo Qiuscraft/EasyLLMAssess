@@ -1,0 +1,12 @@
+import {getStandardQuestionsNoAnswer} from "~/server/db/std-question";
+
+export default defineEventHandler(async (event) => {
+    const query = getQuery(event);
+    return await getStandardQuestionsNoAnswer(
+        query.id !== undefined ? Number(query.id) : undefined,
+        query.content as string || '',
+        query.sort_by as string || 'desc',
+        query.page !== undefined ? Number(query.page) : 1,
+        query.page_size !== undefined ? Number(query.page_size) : 5
+    );
+})

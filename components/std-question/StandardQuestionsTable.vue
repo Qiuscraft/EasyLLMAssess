@@ -4,6 +4,7 @@ import type { TableColumn } from '@nuxt/ui'
 import type {StdQuestion} from "~/server/types/mysql";
 import {UButton, UInput} from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
+import Pagination from "~/components/common/Pagination.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
 
@@ -15,6 +16,8 @@ const totalNoFilter = ref(0);
 const sort_by = ref('desc')
 const content = ref('')
 const answer = ref('')
+const page_size = ref(5)
+const page = ref(1)
 
 async function fetchData() {
   loading.value = true;
@@ -22,7 +25,8 @@ async function fetchData() {
     const response = await $fetch('/api/v1/std-question', {
       method: 'GET',
       params: {
-        page_size: 32767,
+        page: page.value,
+        page_size: page_size.value,
         sort_by: sort_by.value,
         content: content.value,
         answer: answer.value,
@@ -140,11 +144,7 @@ const columns: TableColumn<StdQuestion>[] = [
   },
 ]
 
-watch(content, async () => {
-  await fetchData();
-}, { deep: true });
-
-watch(answer, async () => {
+watch([content, answer, page, page_size], async () => {
   await fetchData();
 }, { deep: true });
 
@@ -181,6 +181,13 @@ const handleSubmit = () => {
         :columns="columns"
         :loading="loading"
         v-model:column-pinning="columnPinning"
+        :get-row-id="row => row.id"
+    />
+
+    <Pagination
+        v-model:page="page"
+        v-model:page_size="page_size"
+        :total="total"
     />
 
     <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Standard Question #${viewingRow.id}`">
@@ -206,7 +213,7 @@ const handleSubmit = () => {
     </UModal>
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
-      {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} / {{ totalNoFilter }} row(s) selected.
+      {{ selected_id_list.length || 0 }} / {{ totalNoFilter }} row(s) selected.
     </div>
   </div>
 </template>

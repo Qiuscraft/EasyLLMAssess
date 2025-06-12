@@ -38,19 +38,6 @@ async function fetchData() {
   }
 }
 
-onMounted(async () => {
-  await fetchData();
-  // 确保表格初始状态为降序排序
-  if (table?.value?.tableApi) {
-    table.value.tableApi.getColumn('id')?.toggleSorting(true);
-  }
-});
-
-const columnPinning = ref({
-  left: [],
-  right: ['view']
-})
-
 const columns: TableColumn<StdQuestion>[] = [
   {
     accessorKey: 'id',
@@ -103,7 +90,20 @@ watch(content, async () => {
   await fetchData();
 }, { deep: true });
 
+const columnPinning = ref({
+  left: [],
+  right: ['view']
+})
+
 const table = useTemplateRef('table')
+
+onMounted(async () => {
+  await fetchData();
+  // 确保表格初始状态为降序排序
+  if (table?.value?.tableApi) {
+    table.value.tableApi.getColumn('id')?.toggleSorting(true);
+  }
+});
 
 </script>
 
@@ -120,7 +120,6 @@ const table = useTemplateRef('table')
     />
   </div>
 </template>
-
 
 <style scoped>
 </style>

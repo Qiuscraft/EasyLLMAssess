@@ -23,4 +23,8 @@ logs
 .env.*
 !.env.example
 
+# Test Data
 /data/*
+
+# TODO
+TODO.md

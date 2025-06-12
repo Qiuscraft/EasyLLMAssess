@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   page: 1,
   page_size: 5,
   total: 0,
-  description: '每页条目数：',
+  description: 'Items Per Page: ',
   page_size_items: () => [5, 10, 20, 50, 100]
 });
 

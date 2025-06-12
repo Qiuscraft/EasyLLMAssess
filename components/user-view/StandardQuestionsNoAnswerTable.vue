@@ -11,6 +11,8 @@ const totalNoFilter = ref(0);
 
 const sort_by = ref('desc')
 const content = ref('')
+const page_size = ref(5);
+const page = ref(1);
 
 async function fetchData() {
   loading.value = true;
@@ -18,9 +20,10 @@ async function fetchData() {
     const response = await $fetch('/api/v1/std-question-no-answer', {
       method: 'GET',
       params: {
-        page_size: 32767,
+        page_size: page_size.value,
         sort_by: sort_by.value,
         content: content.value,
+        page: page.value,
       }
     });
 
@@ -87,13 +90,21 @@ const columns: TableColumn<StdQuestion>[] = [
 ]
 
 watch(content, async () => {
-  await fetchData();
+  if (page.value !== 1) {
+    page.value = 1; // 重置页码
+  } else {
+    await fetchData();
+  }
 }, { deep: true });
 
 const columnPinning = ref({
   left: [],
   right: ['view']
 })
+
+watch(page, async () => {
+  await fetchData();
+}, { immediate: true });
 
 const table = useTemplateRef('table')
 
@@ -117,6 +128,12 @@ onMounted(async () => {
         :loading="loading"
         v-model:column-pinning="columnPinning"
         class="flex-1 max-h-[500px]"
+    />
+    <UPagination
+        show-edges
+        :items-per-page="page_size"
+        :total="total"
+        v-model:page="page"
     />
   </div>
 </template>

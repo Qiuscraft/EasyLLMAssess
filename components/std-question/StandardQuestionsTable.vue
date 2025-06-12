@@ -144,9 +144,17 @@ const columns: TableColumn<StdQuestion>[] = [
   },
 ]
 
-watch([content, answer, page, page_size], async () => {
+watch([page, page_size], async () => {
   await fetchData();
 }, { deep: true });
+
+watch([content, answer], async () => {
+  if (page.value === 1) {
+    await fetchData();
+  } else {
+    page.value = 1; // Reset to first page when filters change
+  }
+});
 
 const table = useTemplateRef('table')
 

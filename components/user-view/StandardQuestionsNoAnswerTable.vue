@@ -13,6 +13,7 @@ const sort_by = ref('desc')
 const content = ref('')
 const page_size = ref(5);
 const page = ref(1);
+const page_size_items = ref([5, 10, 20, 50, 100]);
 
 async function fetchData() {
   loading.value = true;
@@ -89,7 +90,7 @@ const columns: TableColumn<StdQuestion>[] = [
   }
 ]
 
-watch(content, async () => {
+watch([content, page_size], async () => {
   if (page.value !== 1) {
     page.value = 1; // 重置页码
   } else {
@@ -127,14 +128,19 @@ onMounted(async () => {
         :columns="columns"
         :loading="loading"
         v-model:column-pinning="columnPinning"
-        class="flex-1 max-h-[500px]"
     />
-    <UPagination
-        show-edges
-        :items-per-page="page_size"
-        :total="total"
-        v-model:page="page"
-    />
+    <div class="flex items-center justify-between mt-4">
+      <UPagination
+          show-edges
+          :items-per-page="page_size"
+          :total="total"
+          v-model:page="page"
+      />
+      <div class="flex items-center gap-2">
+        <span>每页条目数：</span>
+        <USelect v-model="page_size" :items="page_size_items" />
+      </div>
+    </div>
   </div>
 </template>
 

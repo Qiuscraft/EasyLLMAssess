@@ -3,6 +3,7 @@ import type { TableColumn } from '@nuxt/ui-pro'
 import type { StdQuestion } from "~/server/types/mysql";
 import { UButton, UInput } from "#components";
 import SubmitButton from "~/components/user-view/SubmitButton.vue";
+import Pagination from "~/components/common/Pagination.vue";
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
@@ -13,7 +14,6 @@ const sort_by = ref('desc')
 const content = ref('')
 const page_size = ref(5);
 const page = ref(1);
-const page_size_items = ref([5, 10, 20, 50, 100]);
 
 async function fetchData() {
   loading.value = true;
@@ -129,18 +129,11 @@ onMounted(async () => {
         :loading="loading"
         v-model:column-pinning="columnPinning"
     />
-    <div class="flex items-center justify-between mt-4">
-      <UPagination
-          show-edges
-          :items-per-page="page_size"
-          :total="total"
-          v-model:page="page"
-      />
-      <div class="flex items-center gap-2">
-        <span>每页条目数：</span>
-        <USelect v-model="page_size" :items="page_size_items" />
-      </div>
-    </div>
+    <Pagination
+        v-model:page="page"
+        v-model:page_size="page_size"
+        :total="total"
+    />
   </div>
 </template>
 

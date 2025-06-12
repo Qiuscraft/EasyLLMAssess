@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
-import type {StdQuestion} from "~/server/types/mysql";
-import {UButton, UInput} from "#components";
+import type { TableColumn } from '@nuxt/ui-pro'
+import type { StdQuestion } from "~/server/types/mysql";
+import { UButton, UInput } from "#components";
 import SubmitButton from "~/components/user-view/SubmitButton.vue";
 
 const data = ref<StdQuestion[]>([]);

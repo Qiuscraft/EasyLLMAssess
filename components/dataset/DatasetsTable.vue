@@ -4,19 +4,27 @@ import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
 import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
+import Pagination from "~/components/common/Pagination.vue";
 
 const page = ref(1)
 const page_size = ref(5)
 
-const query = ref(
+const searchName = ref('')
+
+const sorting = ref([
   {
-    name: '',
-    order_field: 'created_at',
-    order_by: 'desc',
-    page: page,
-    page_size: page_size
+    id: 'created_at',
+    desc: true
   }
-)
+])
+
+const query = computed(() => ({
+  name: searchName.value,
+  order_field: sorting.value[0]?.id || 'created_at',
+  order_by: sorting.value[0]?.desc ? 'desc' : 'asc',
+  page: page.value,
+  page_size: page_size.value,
+}))
 
 const datasets = ref<Dataset[]>([])
 const loading = ref(true)
@@ -48,7 +56,6 @@ onMounted(async () => {
 })
 
 const viewingRow = ref<Dataset | null>(null)
-const searchName = ref('')
 
 const columns: TableColumn<Dataset>[] = [
   {
@@ -143,21 +150,7 @@ const columns: TableColumn<Dataset>[] = [
   },
 ]
 
-const sorting = ref([
-  {
-    id: 'created_at',
-    desc: true
-  }
-])
-
-watch(sorting, async () => {
-  query.value.order_field = sorting.value[0]?.id || 'created_at';
-  query.value.order_by = sorting.value[0]?.desc ? 'desc' : 'asc';
-  await fetchData();
-}, { deep: true });
-
-watch(searchName, async () => {
-  query.value.name = searchName.value || '';
+watch(query, async () => {
   await fetchData();
 }, { deep: true });
 
@@ -165,11 +158,6 @@ const columnPinning = ref({
   left: [],
   right: ['view']
 })
-
-async function handlePageChange(newPage: number) {
-  page.value = newPage;
-  await fetchData();
-}
 </script>
 
 <template>
@@ -177,19 +165,15 @@ async function handlePageChange(newPage: number) {
     :data="datasets"
     :columns="columns"
     :loading="loading"
-    class="flex-1 max-h-[500px]"
     v-model:column-pinning="columnPinning"
     v-model:sorting="sorting"
   />
 
-  <div class="flex justify-center border-t border-default pt-4">
-    <UPagination
-        show-edges
-        :items-per-page="page_size"
-        :total="total"
-        @update:page="handlePageChange"
-    />
-  </div>
+  <Pagination
+      v-model:page="page"
+      v-model:page_size="page_size"
+      :total="total"
+  />
 
   <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Dataset #${viewingRow.id}`">
     <template #body>

@@ -5,6 +5,7 @@ import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 import SrcAnswerCard from "~/components/source-question/SrcAnswerCard.vue";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
+import Pagination from "~/components/common/Pagination.vue";
 
 const data = ref<SrcQuestion[]>([]);
 const loading = ref(true);
@@ -121,10 +122,9 @@ async function fetchData() {
 const page = ref(1);
 const page_size = ref(5);
 
-async function handlePageChange(newPage: number) {
-  page.value = newPage;
+watch([page, page_size], async () => {
   await fetchData();
-}
+});
 
 onMounted(async () => {
   await fetchData();
@@ -149,14 +149,13 @@ const viewing = ref<SrcQuestion | null>(null);
     :data="data"
     :columns="columns"
     v-model:column-pinning="columnPinning"
-    class="flex-1 max-h-[600px]"
+    class="flex-1"
     v-model:sorting="sorting"
   />
-  <UPagination
-      show-edges
-      :items-per-page="page_size"
+  <Pagination
+      v-model:page="page"
+      v-model:page_size="page_size"
       :total="total"
-      @update:page="handlePageChange"
   />
   <UModal v-if="viewing" v-model:open="viewing" fullscreen :title="`Source Question #${viewing.id}`">
     <UButton label="View" color="neutral" variant="subtle" />

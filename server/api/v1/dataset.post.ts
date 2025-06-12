@@ -10,12 +10,16 @@ export default defineEventHandler(async (event) => {
         const id: number[] = body.std_questions;
 
         // 调用导入函数处理数据
-        await createDataset(datasetName, versionName, id);
-
-        // 返回成功响应
-        return {
-        }
+        return await createDataset(datasetName, versionName, id);
     } catch (error) {
-        throw error;
+        let message: string | undefined = undefined;
+        // 处理特定类型的错误
+        if (error.code === 'ER_DUP_ENTRY') {
+            message = 'Dataset creation failed due to duplicate dataset name.'
+        }
+
+        return {
+            error_message: message || 'An error occurred.',
+        }
     }
 })

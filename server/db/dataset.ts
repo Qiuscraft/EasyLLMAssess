@@ -29,7 +29,10 @@ export async function createDataset(name: string, version: string, idList: numbe
       }
 
       await conn.commit();
-      return datasetId;
+      return {
+        dataset_id: datasetId,
+        dataset_version_id: versionId,
+      };
     } catch (error) {
       await conn.rollback();
       throw error;

@@ -9,15 +9,15 @@ const toast = useToast()
 
 async function handleSubmit() {
   loading.value = true
-  try {
-    await $fetch('/api/v1/dataset', {
-      method: 'POST',
-      body: {
-        dataset_name: name.value,
-        version_name: version.value,
-        std_questions: props.id_list,
-      }
-    });
+  const result = await $fetch('/api/v1/dataset', {
+    method: 'POST',
+    body: {
+      dataset_name: name.value,
+      version_name: version.value,
+      std_questions: props.id_list,
+    }
+  });
+  if (!result.error_message) {
     toast.add({
       title: `Dataset ${name.value}-${version.value} created successfully!`,
       color: 'success'
@@ -26,10 +26,10 @@ async function handleSubmit() {
     version.value = '1.0';
     open.value = false;
     emit('submit');
-  } catch (error) {
+  } else {
     toast.add({
       title: "Dataset creation failed",
-      description: (error as Error).message,
+      description: result.error_message || 'An unknown error occurred.',
       color: 'error'
     })
   }

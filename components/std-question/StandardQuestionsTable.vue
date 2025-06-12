@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
-import type {StdQuestion} from "~/server/types/mysql";
-import {UButton, UInput} from "#components";
+import type { TableColumn } from '@nuxt/ui-pro'
+import type { StdQuestion } from "~/server/types/mysql";
+import { UButton, UInput } from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
 

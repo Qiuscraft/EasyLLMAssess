@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   page: 1,
   page_size: 5,
   total: 0,
-  description: 'Items Per Page: ',
+  description: 'Items Per Page',
   page_size_items: () => [5, 10, 20, 50, 100]
 });
 
@@ -37,7 +37,9 @@ const currentPageSize = computed({
         v-model:page="currentPage"
     />
     <div class="flex items-center gap-2">
-      <span>{{props.description}}</span>
+      <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+        {{ props.description }}
+      </span>
       <USelect v-model="currentPageSize" :items="props.page_size_items" />
     </div>
   </div>

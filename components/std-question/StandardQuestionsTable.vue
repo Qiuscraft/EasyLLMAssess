@@ -181,7 +181,6 @@ const handleSubmit = () => {
         :columns="columns"
         :loading="loading"
         v-model:column-pinning="columnPinning"
-        class="flex-1 max-h-[500px]"
     />
 
     <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Standard Question #${viewingRow.id}`">

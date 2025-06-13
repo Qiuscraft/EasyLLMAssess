@@ -18,19 +18,25 @@ const content = ref('')
 const answer = ref('')
 const page_size = ref(5)
 const page = ref(1)
+const onlyShowQuestionWithAnswer = ref(true);
+
+const params = computed(() => {
+  return {
+    page: page.value,
+    page_size: page_size.value,
+    sort_by: sort_by.value,
+    content: content.value,
+    answer: answer.value,
+    only_show_answered: onlyShowQuestionWithAnswer.value,
+  };
+});
 
 async function fetchData() {
   loading.value = true;
   try {
     const response = await $fetch('/api/v1/std-question', {
       method: 'GET',
-      params: {
-        page: page.value,
-        page_size: page_size.value,
-        sort_by: sort_by.value,
-        content: content.value,
-        answer: answer.value,
-      }
+      params: params.value,
     });
 
     data.value = response.std_questions;
@@ -148,7 +154,7 @@ watch([page, page_size], async () => {
   await fetchData();
 }, { deep: true });
 
-watch([content, answer], async () => {
+watch([content, answer, onlyShowQuestionWithAnswer], async () => {
   if (page.value === 1) {
     await fetchData();
   } else {
@@ -178,6 +184,7 @@ const handleSubmit = () => {
 </script>
 
 <template>
+  <UCheckbox v-model="onlyShowQuestionWithAnswer" color="primary" label="Only show the questions that have standard answer" />
   <div class="flex-1 w-full">
     <CreateDatasetButton :id_list="selected_id_list" @submit="handleSubmit" />
 

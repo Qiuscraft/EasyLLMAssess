@@ -102,13 +102,26 @@ export async function getStandardQuestions(
     answer: string = '',
     order_by: string = 'desc',
     page: number = 1,
-    page_size: number = 5
+    page_size: number = 5,
+    onlyShowAnswered: boolean = false,
 ): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
         // 将 undefined 转换为 null
         const idParam = id === undefined ? null : id;
-        const whereClause = '(? IS NULL OR id = ?) AND content LIKE ? AND answer LIKE ?';
-        const params = [idParam, idParam, `%${content}%`, `%${answer}%`];
+
+        // 构建基本的 where 子句
+        let whereClause = '(? IS NULL OR id = ?) AND content LIKE ?';
+        let params = [idParam, idParam, `%${content}%`];
+
+        // 根据 onlyShowAnswered 参数调整查询条件
+        if (onlyShowAnswered) {
+            // 只显示已回答的问题
+            whereClause += ' AND answer IS NOT NULL AND answer != \'\'';
+        } else {
+            // 使用原来的过滤条件
+            whereClause += ' AND answer LIKE ?';
+            params.push(`%${answer}%`);
+        }
 
         return await processStandardQuestions(conn, whereClause, params, order_by, page, page_size);
     });

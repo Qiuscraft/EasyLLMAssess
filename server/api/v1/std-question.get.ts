@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
         query.answer as string || '',
         query.sort_by as string || 'desc',
         query.page !== undefined ? Number(query.page) : 1,
-        query.page_size !== undefined ? Number(query.page_size) : 5
+        query.page_size !== undefined ? Number(query.page_size) : 5,
+        query.only_show_answered === 'true',
     );
 })

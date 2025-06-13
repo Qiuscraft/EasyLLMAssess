@@ -18,6 +18,11 @@ const items = ref<NavigationMenuItem[]>([
     to: '/standard-questions',
   },
   {
+    label: 'Candidate Answers',
+    icon: 'i-lucide-newspaper',
+    to: '/candidate-answers',
+  },
+  {
     label: 'Datasets',
     icon: 'i-lucide-database',
     to: '/datasets',

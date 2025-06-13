@@ -17,6 +17,11 @@ export interface StdQuestion {
     points: Point[];   // 评分点数组
 }
 
+export interface StdQuestionWithoutAnswer {
+    id: number;
+    content: string;  // 问题内
+}
+
 export interface SrcAnswer {
     id: number;
     content: string;
@@ -42,7 +47,7 @@ export interface Dataset {
 
 export interface CandidateAnswer {
     id: number;
-    std_question_id: number; // 标准问题 ID
+    std_question: StdQuestionWithoutAnswer;
     content: string;          // 答案内容
     author: string;       // 用户名
 }

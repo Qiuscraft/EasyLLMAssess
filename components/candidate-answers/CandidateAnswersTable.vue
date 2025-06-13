@@ -21,6 +21,8 @@ const page_size = ref(5);
 const data = ref<CandidateAnswer[]>([]);
 const total = ref(0);
 
+const onlyShowNoStandardAnswer = ref(true);
+
 const query = computed(() => {
   return {
     std_question: search_std_question.value,
@@ -30,6 +32,7 @@ const query = computed(() => {
     sort_field: sort_field.value,
     page: page.value,
     page_size: page_size.value,
+    only_show_no_std_answer: onlyShowNoStandardAnswer.value,
   }
 })
 
@@ -172,6 +175,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <UCheckbox v-model="onlyShowNoStandardAnswer" color="primary" label="Don't show the questions that already have standard answers" />
   <div class="flex-1 w-full">
     <UTable
         sticky

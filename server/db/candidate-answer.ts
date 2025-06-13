@@ -23,6 +23,7 @@ export async function getCandidateAnswer(
     order_by: string = 'desc',
     page: number = 1,
     page_size: number = 10,
+    onlyShowNoStandardAnswer: boolean = false,
 ): Promise<{
     total: number,
     candidate_answers: CandidateAnswer[],
@@ -55,6 +56,10 @@ export async function getCandidateAnswer(
         if (std_question) {
             conditions.push('sq.content LIKE ?');
             params.push(`%${std_question}%`);
+        }
+
+        if (onlyShowNoStandardAnswer) {
+            conditions.push('(sq.answer IS NULL OR sq.answer = "")');
         }
 
         // 构建完整的 WHERE 子句

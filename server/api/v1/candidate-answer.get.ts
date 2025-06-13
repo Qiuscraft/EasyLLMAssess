@@ -23,6 +23,8 @@ export default defineEventHandler(async (event) => {
     const page = query.page ? Math.max(1, parseInt(query.page as string)) : 1;
     const page_size = query.page_size ? Math.max(1, parseInt(query.page_size as string)) : 10;
 
+    const onlyShowNoStandardAnswer = query.only_show_no_std_answer === 'true';
+
     try {
         // 调用数据库函数获取候选回答
         const result = await getCandidateAnswer(
@@ -34,7 +36,8 @@ export default defineEventHandler(async (event) => {
             sort_field,
             sort_by,
             page,
-            page_size
+            page_size,
+            onlyShowNoStandardAnswer,
         );
 
         return {

@@ -4,6 +4,7 @@ import type { CandidateAnswer, StdQuestion } from "~/server/types/mysql";
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
 import SortButton from "~/components/common/SortButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
+import CandidateAnswerAdoptingModal from "~/components/candidate-answers/CandidateAnswerAdoptingModal.vue";
 
 const loading = ref(true);
 
@@ -33,6 +34,9 @@ const query = computed(() => {
 })
 
 const sortButtonRefs = ref<Record<string, any>>({});
+
+const modalOpen = ref(false);
+const modalAnswer = ref<CandidateAnswer | undefined>(undefined);
 
 async function fetchData() {
   loading.value = true;
@@ -137,6 +141,18 @@ const columns: TableColumn<StdQuestion>[] = [
     },
     cell: ({ row }) => h('div', { innerHTML: row.getValue('author') }),
   },
+  {
+    accessorKey: 'action',
+    header: 'Action',
+    cell: ({ row }: { row: any }) => h(resolveComponent('UButton'), {
+      color: "neutral",
+      variant: "outline",
+      onClick: () => {
+        modalAnswer.value = row.original;
+        modalOpen.value = true;
+      }
+    }, () => 'Adopt'),
+  },
 ]
 
 watch(query, async () => {
@@ -169,6 +185,7 @@ onMounted(async () => {
         v-model:page_size="page_size"
         :total="total"
     />
+    <CandidateAnswerAdoptingModal v-model:open="modalOpen" :answer="modalAnswer" />
   </div>
 </template>
 

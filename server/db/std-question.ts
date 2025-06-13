@@ -1,6 +1,7 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
 import {StdQuestion, Point} from "~/server/types/mysql";
+import {InsertingPoint} from "~/server/types/inserting";
 
 /**
  * 处理标准问题查询并关联评分点的辅助函数
@@ -130,3 +131,52 @@ export async function getStandardQuestionsNoAnswer(
     });
 }
 
+export async function setStandardAnswer(
+    id: number,
+    answer: string,
+    scoringPoints: InsertingPoint[],
+): Promise<void> {
+    return await withConnection(async (conn: mysql.Connection) => {
+        try {
+            // 开始事务
+            await conn.beginTransaction();
+
+            // 1. 更新标准问题的答案
+            await conn.execute(
+                'UPDATE std_question SET answer = ? WHERE id = ?',
+                [answer, id]
+            );
+
+            // 2. 删除该问题与所有评分点的关联
+            await conn.execute(
+                'DELETE FROM std_question_point WHERE std_question_id = ?',
+                [id]
+            );
+
+            // 3. 处理新的评分点
+            for (const point of scoringPoints) {
+                // 插入新的评分点
+                const [result] = await conn.execute(
+                    'INSERT INTO point (content, score) VALUES (?, ?)',
+                    [point.content, point.score]
+                );
+
+                // 获取新插入的评分点ID
+                const pointId = (result as mysql.ResultSetHeader).insertId;
+
+                // 建立问题与评分点的关联
+                await conn.execute(
+                    'INSERT INTO std_question_point (std_question_id, point_id) VALUES (?, ?)',
+                    [id, pointId]
+                );
+            }
+
+            // 提交事务
+            await conn.commit();
+        } catch (error) {
+            // 发生错误时回滚事务
+            await conn.rollback();
+            throw error;
+        }
+    });
+}

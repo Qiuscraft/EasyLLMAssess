@@ -181,7 +181,7 @@ const columnPinning = ref({
           :title="`${viewingRow.name} - ${viewingRow.version}`"
           :description="`Created At: ${viewingRow.created_at}`"
       >
-        <StdQuestionsCard :std_questions="viewingRow.questions" />
+        <StdQuestionsCard :questions="viewingRow.questions" />
       </UPageCard>
     </template>
   </UModal>

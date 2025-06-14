@@ -155,7 +155,7 @@ const viewing = ref<SrcQuestion | null>(null);
     <template #body>
       <div v-html="viewing.content"></div>
       <SrcAnswerCard :answers="viewing.answers" />
-      <StdQuestionsCard :std_questions="viewing.stdQuestions" />
+      <StdQuestionsCard :questions="viewing.stdQuestions" />
     </template>
   </UModal>
 </template>

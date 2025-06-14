@@ -11,30 +11,14 @@ export async function getStandardQuestions(
     page: number = 1,
     page_size: number = 5,
     onlyShowAnswered: boolean = false,
+    onlyShowNoAnswered: boolean = false,
 ): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
         return {
-            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered),
+            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered),
             total_no_filter: await getTotalStandardQuestionsNoFilter(conn),
-            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, order_by, page, page_size),
+            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, order_by, page, page_size),
         }
-    });
-}
-
-export async function getStandardQuestionsNoAnswer(
-    id: number | undefined = undefined,
-    content: string = '',
-    order_by: string = 'desc',
-    page: number = 1,
-    page_size: number = 5
-): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
-    return await withConnection(async (conn: mysql.Connection) => {
-        // 将 undefined 转换为 null
-        const idParam = id === undefined ? null : id;
-        const whereClause = '(? IS NULL OR id = ?) AND content LIKE ? AND answer = \'\'';
-        const params = [idParam, idParam, `%${content}%`];
-
-        return await processStandardQuestions(conn, whereClause, params, order_by, page, page_size);
     });
 }
 
@@ -68,7 +52,7 @@ export async function setStandardAnswer(
                     [point.content, point.score]
                 );
 
-                // 获取新插��的评分点ID
+                // 获取新插�����的评分点ID
                 const pointId = (result as mysql.ResultSetHeader).insertId;
 
                 // 建立问题与评分点的关联
@@ -99,7 +83,8 @@ function buildStdQuestionFilter(
     id: number | undefined,
     content: string,
     answer: string,
-    onlyShowAnswered: boolean
+    onlyShowAnswered: boolean,
+    onlyShowNoAnswered: boolean = false
 ): { conditions: string[], params: any[], whereClause: string } {
     const idParam = id === undefined ? null : id;
     const filterConditions: string[] = [];
@@ -126,6 +111,8 @@ function buildStdQuestionFilter(
             filterConditions.push(`${answerTableAlias}.content LIKE ?`);
             filterParams.push(`%${answer}%`);
         }
+    } else if (onlyShowNoAnswered) {
+        filterConditions.push(`${answerTableAlias}.id IS NULL`);
     } else {
         if (answer) {
             filterConditions.push(`${answerTableAlias}.content LIKE ?`);
@@ -147,6 +134,7 @@ export async function getStandardQuestionsAfterFiltered(
     content: string = '',
     answer: string = '',
     onlyShowAnswered: boolean = false,
+    onlyShowNoAnswered: boolean = false,
     order_by: string = 'desc',
     page: number = 1,
     page_size: number = 5,
@@ -155,7 +143,8 @@ export async function getStandardQuestionsAfterFiltered(
         id,
         content,
         answer,
-        onlyShowAnswered
+        onlyShowAnswered,
+        onlyShowNoAnswered
     );
 
     const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
@@ -309,19 +298,21 @@ export async function getTotalStandardQuestionsAfterFiltered(
     content: string = '',
     answer: string = '',
     onlyShowAnswered: boolean = false,
+    onlyShowNoAnswered: boolean = false,
 ): Promise<number> {
     const { whereClause, params } = buildStdQuestionFilter(
         id,
         content,
         answer,
-        onlyShowAnswered
+        onlyShowAnswered,
+        onlyShowNoAnswered
     );
 
     // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
-    // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的别名一致。
+    // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的���名一致。
     // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数，或者不使用别名。
     // 为了简单起见，这里直接替换查询中的别名以匹配 buildStdQuestionFilter 的输出。
-    // 一个更健壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
+    // 一个更���壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
 
     // 当前 buildStdQuestionFilter 使用的别名是：
     // std_question -> sq_filter
@@ -422,4 +413,3 @@ export async function getStdQuestionBySrcQuestionId(srcQuestionId: number, conn:
     }
     return stdQuestions;
 }
-

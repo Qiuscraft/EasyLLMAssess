@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui-pro'
-import type { StdQuestion } from "~/server/types/mysql";
+import type {StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import { UButton } from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
-import {responseToStdQuestions} from "~/utils/std-question";
+import {responseToStdQuestions, sortStdQuestionVersionsByCreationTime} from "~/utils/std-question";
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
@@ -153,6 +153,10 @@ watch([content, answer, onlyShowQuestionWithAnswer], async () => {
 const table = useTemplateRef('table')
 
 const viewingRow = ref<StdQuestion | null>(null)
+const viewingRowSorted = computed(() => {
+  if (!viewingRow.value) return null;
+  return sortStdQuestionVersionsByCreationTime(viewingRow.value);
+})
 const rowSelection = ref<Record<number, boolean>>({ })
 
 const columnPinning = ref({
@@ -169,6 +173,15 @@ const selected_id_list = computed(() => {
 const handleSubmit = () => {
   rowSelection.value = {};
 }
+
+const viewingVersion = ref<StdQuestionVersion | null>(null);
+watch(viewingRow, () => {
+  if (viewingRowSorted.value) {
+    viewingVersion.value = viewingRowSorted.value.versions[0];
+  } else {
+    viewingVersion.value = null;
+  }
+});
 </script>
 
 <template>
@@ -193,15 +206,21 @@ const handleSubmit = () => {
         :total="total"
     />
 
-    <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Standard Question #${viewingRow.id}`">
+    <UModal
+        v-if="viewingRow && viewingVersion"
+        v-model:open="viewingVersion"
+        fullscreen
+        :title="`Standard Question #${viewingRow.id}-${viewingVersion.version}`"
+    >
       <template #body>
         <UPageCard class="p-4 space-y-4">
           <UPageCard
-              :title="`Standard Question: ${viewingRow.content}`"
-              :description="`Standard Answer: ${viewingRow.answer}`"
+              :title="`Standard Question: ${viewingVersion.content}`"
+              :description="`Standard Answer: ${viewingVersion.answer.content}`"
           >
             <UTable
-                :data="viewingRow.points"
+                v-if="viewingVersion.answer"
+                :data="viewingVersion.answer.scoringPoints"
                 :columns="[
                 { accessorKey: 'content', header: 'Point' },
                 { accessorKey: 'score', header: 'Score' }
@@ -209,9 +228,6 @@ const handleSubmit = () => {
             />
           </UPageCard>
         </UPageCard>
-      </template>
-      <template #footer>
-        <UButton label="Close" color="neutral" @click="viewingRow = null" />
       </template>
     </UModal>
 

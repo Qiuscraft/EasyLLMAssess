@@ -41,6 +41,9 @@ const currentPageSize = computed({
         {{ props.description }}
       </span>
       <USelect v-model="currentPageSize" :items="props.page_size_items" />
+      <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+        Total Items after Filtered: {{ props.total }}
+      </span>
     </div>
   </div>
 </template>

@@ -23,6 +23,7 @@ export interface StdQuestionVersion {
     answer: StdAnswer | undefined;
     category: string | undefined;
     tags: string[] | undefined;
+    stdQuestionId: number;
 }
 
 export interface StdAnswer {

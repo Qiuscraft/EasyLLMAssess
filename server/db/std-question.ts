@@ -262,6 +262,7 @@ export async function getStandardQuestionsAfterFiltered(
                 category: row.version_category,
                 tags: [],
                 answer: undefined,
+                stdQuestionId: row.std_q_id,
             };
             versionsMap.set(row.version_id, version);
             stdQuestion.versions.push(version);
@@ -400,6 +401,7 @@ export async function getStdQuestionByStdQuestionId(stdQuestionId: number, conn:
             category: versionRow.category || undefined,
             tags: tags,
             answer: answer,
+            stdQuestionId: stdQuestionId,
         }
         question.versions.push(version);
     }

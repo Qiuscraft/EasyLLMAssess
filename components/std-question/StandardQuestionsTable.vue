@@ -239,6 +239,8 @@ const handleSubmit = () => {
 }
 
 const viewingVersion = ref<StdQuestionVersion | null>(null);
+const isModalOpen = ref(false);
+
 watch(viewingRow, () => {
   if (viewingRowSorted.value) {
     // 如果有查看某一行，使用该行当前选中的版本
@@ -248,10 +250,19 @@ watch(viewingRow, () => {
     } else {
       viewingVersion.value = viewingRowSorted.value.versions[0];
     }
+    isModalOpen.value = true;
   } else {
     viewingVersion.value = null;
+    isModalOpen.value = false;
   }
 });
+
+watch (isModalOpen, (newValue) => {
+  if (!newValue) {
+    viewingRow.value = null;
+    viewingVersion.value = null;
+  }
+})
 </script>
 
 <template>
@@ -278,7 +289,7 @@ watch(viewingRow, () => {
 
     <UModal
         v-if="viewingRow && viewingVersion"
-        v-model:open="viewingVersion"
+        v-model:open="isModalOpen"
         fullscreen
         :title="`Standard Question #${viewingRow.id}-${viewingVersion.version}`"
     >

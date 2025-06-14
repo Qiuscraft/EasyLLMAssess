@@ -20,7 +20,7 @@ export interface StdQuestionVersion {
     version: string;
     createdAt: Date;
     content: string; // 问题内容
-    answer: StdAnswer; // 答案内容
+    answer: StdAnswer | undefined;
     category: string | undefined;
     tags: string[] | undefined;
 }

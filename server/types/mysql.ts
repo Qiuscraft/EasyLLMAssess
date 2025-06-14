@@ -1,5 +1,3 @@
-import {InsertingScoringPoint} from "~/server/types/inserting";
-
 export interface SrcQuestion {
     id: number;
     content: string;

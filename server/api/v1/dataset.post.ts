@@ -12,14 +12,26 @@ export default defineEventHandler(async (event) => {
         // 调用导入函数处理数据
         return await createDataset(datasetName, versionName, id);
     } catch (error) {
-        let message: string | undefined = undefined;
-        // 处理特定类型的错误
-        if (error.code === 'ER_DUP_ENTRY') {
-            message = 'Dataset creation failed due to duplicate dataset name.'
+        let message: string = 'Unknown error.';
+
+        // 检查是否为 MySQL 错误
+        if (error &&
+            typeof error === 'object' &&
+            'code' in error &&
+            typeof error.code === 'string') {
+
+            // 现在可以安全地检查 MySQL 的错误代码
+            if (error.code === 'ER_DUP_ENTRY') {
+                message = 'Dataset creation failed due to duplicate dataset name.'
+            }
+        }
+
+        if (message === 'Unknown error.') {
+            console.log(error);
         }
 
         return {
-            error_message: message || 'An error occurred.',
+            error_message: message,
         }
     }
 })

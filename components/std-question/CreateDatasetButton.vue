@@ -23,7 +23,7 @@ async function handleSubmit() {
       color: 'success'
     });
     name.value = '';
-    version.value = '1.0';
+    version.value = '1.0.0';
     open.value = false;
     emit('submit');
   } else {
@@ -37,7 +37,7 @@ async function handleSubmit() {
 }
 
 const name = ref('')
-const version = ref('1.0')
+const version = ref('1.0.0')
 
 </script>
 <template>

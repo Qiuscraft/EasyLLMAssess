@@ -187,7 +187,7 @@ const columns: TableColumn<StdQuestion>[] = [
     cell: ({ row }: { row: any }) => {
       const questionId = row.original.id;
       const currentVersion = getCurrentVersion(questionId);
-      return h('div', { innerHTML: currentVersion?.answer?.content || 'No answer' });
+      return h('div', { innerHTML: currentVersion?.answer?.content || 'No standard answer available.' });
     },
   },
   {
@@ -297,7 +297,7 @@ watch (isModalOpen, (newValue) => {
         <UPageCard class="p-4 space-y-4">
           <UPageCard
               :title="`Standard Question: ${viewingVersion.content}`"
-              :description="`Standard Answer: ${viewingVersion.answer?.content}` || 'No standard answer available.'"
+              :description="`Standard Answer: ${viewingVersion.answer?.content || 'No standard answer available.'}`"
           >
             <UTable
                 v-if="viewingVersion.answer"

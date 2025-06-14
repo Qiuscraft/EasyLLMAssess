@@ -116,7 +116,7 @@ const columns: TableColumn<StdQuestion>[] = [
         ])
       ])
     },
-    cell: ({ row }) => h('div', { innerHTML: row.getValue('content') }),
+    cell: ({ row }) => h('div', { innerHTML: row.original.versions[0].content }),
   },
   {
     accessorKey: 'answer',
@@ -136,7 +136,7 @@ const columns: TableColumn<StdQuestion>[] = [
         ])
       ])
     },
-    cell: ({ row }) => h('div', { innerHTML: row.getValue('answer') }),
+    cell: ({ row }) => h('div', { innerHTML: row.original.versions[0].answer.content }),
   },
   {
     id: 'view',

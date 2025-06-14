@@ -3,96 +3,6 @@ import mysql from "mysql2/promise";
 import {StdQuestion, ScoringPoint, StdAnswer, StdQuestionVersion} from "~/server/types/mysql";
 import {InsertingScoringPoint} from "~/server/types/inserting";
 
-async function processStandardQuestions(
-    conn: mysql.Connection,
-    whereClause: string,
-    params: any[],
-    order_by: string = 'desc',
-    page: number = 1,
-    page_size: number = 5
-): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
-    // 1. 获取筛选前的总数
-    const [totalNoFilterRows] = await conn.execute(
-        `
-            SELECT COUNT(*) as total
-            FROM std_question
-        `
-    );
-    const total_no_filter = (totalNoFilterRows as any[])[0].total;
-
-    // 2. 获取筛选后的总数
-    const [totalRows] = await conn.execute(
-        `
-            SELECT COUNT(*) as total
-            FROM std_question
-            WHERE ${whereClause}
-        `,
-        params
-    );
-    const total = (totalRows as any[])[0].total;
-
-    // 3. 获取所有标准问题，支持筛选和排序
-    const [stdRows] = await conn.execute(
-        `
-            SELECT id, content, answer
-            FROM std_question
-            WHERE ${whereClause}
-            ORDER BY id ${order_by}
-            LIMIT ${page_size} OFFSET ${(page - 1) * page_size}
-        `,
-        params
-    );
-    const stdQuestions: { [key: number]: StdQuestion } = {};
-    const questionIds: number[] = [];
-
-    for (const row of stdRows as any[]) {
-        const questionId = row.id;
-        questionIds.push(questionId);
-        stdQuestions[questionId] = {
-            id: questionId,
-            content: row.content,
-            answer: row.answer,
-            points: [],
-        };
-    }
-
-    // 如果没有找到问题，直接返回
-    if (questionIds.length === 0) {
-        return {
-            total: total,
-            total_no_filter: total_no_filter,
-            "std_questions": [],
-        };
-    }
-
-    // 4. 只获取与筛选出的标准问题相关的评分点
-    const [pointRows] = await conn.execute(
-        `SELECT p.id, p.content, p.score, sqp.std_question_id
-        FROM point p
-        JOIN std_question_point sqp ON p.id = sqp.point_id
-        WHERE sqp.std_question_id IN (${questionIds.map(() => '?').join(',')})`,
-        questionIds
-    );
-
-    for (const row of pointRows as any[]) {
-        const point: ScoringPoint = {
-            id: row.id,
-            content: row.content,
-            score: row.score
-        };
-
-        if (stdQuestions[row.std_question_id]) {
-            stdQuestions[row.std_question_id].points.push(point);
-        }
-    }
-
-    return {
-        total: total,
-        total_no_filter: total_no_filter,
-        "std_questions": Object.values(stdQuestions),
-    };
-}
-
 export async function getStandardQuestions(
     id: number | undefined = undefined,
     content: string = '',
@@ -103,24 +13,11 @@ export async function getStandardQuestions(
     onlyShowAnswered: boolean = false,
 ): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
-        // 将 undefined 转换为 null
-        const idParam = id === undefined ? null : id;
-
-        // 构建基本的 where 子句
-        let whereClause = '(? IS NULL OR id = ?) AND content LIKE ?';
-        let params = [idParam, idParam, `%${content}%`];
-
-        // 根据 onlyShowAnswered 参数调整查询条件
-        if (onlyShowAnswered) {
-            // 只显示已回答的问题
-            whereClause += ' AND answer IS NOT NULL AND answer != \'\'';
-        } else {
-            // 使用原来的过滤条件
-            whereClause += ' AND answer LIKE ?';
-            params.push(`%${answer}%`);
+        return {
+            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered),
+            total_no_filter: await getTotalStandardQuestionsNoFilter(conn),
+            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, order_by, page, page_size),
         }
-
-        return await processStandardQuestions(conn, whereClause, params, order_by, page, page_size);
     });
 }
 
@@ -191,6 +88,233 @@ export async function setStandardAnswer(
     });
 }
 
+export async function getTotalStandardQuestionsNoFilter(conn: mysql.Connection): Promise<number> {
+    const query = `SELECT COUNT(*) as total FROM std_question`;
+    const [rows] = await conn.execute(query);
+    return (rows as any[])[0].total;
+}
+
+// 辅助函数：构建标准问题筛选条件
+function buildStdQuestionFilter(
+    id: number | undefined,
+    content: string,
+    answer: string,
+    onlyShowAnswered: boolean
+): { conditions: string[], params: any[], whereClause: string } {
+    const idParam = id === undefined ? null : id;
+    const filterConditions: string[] = [];
+    const filterParams: any[] = [];
+
+    const baseTableAlias = 'sq_filter'; // 用于 std_question 的别名
+    const versionTableAlias = 'sqv_filter'; // 用于 std_question_version 的别名
+    const answerTableAlias = 'sa_filter'; // 用于 std_answer 的别名
+
+
+    if (idParam !== null) {
+        filterConditions.push(`${baseTableAlias}.id = ?`);
+        filterParams.push(idParam);
+    }
+
+    if (content) {
+        filterConditions.push(`${versionTableAlias}.content LIKE ?`);
+        filterParams.push(`%${content}%`);
+    }
+
+    if (onlyShowAnswered) {
+        filterConditions.push(`${answerTableAlias}.id IS NOT NULL`);
+        if (answer) {
+            filterConditions.push(`${answerTableAlias}.content LIKE ?`);
+            filterParams.push(`%${answer}%`);
+        }
+    } else {
+        if (answer) {
+            filterConditions.push(`${answerTableAlias}.content LIKE ?`);
+            filterParams.push(`%${answer}%`);
+        }
+    }
+
+    let whereClause = '';
+    if (filterConditions.length > 0) {
+        whereClause = 'WHERE ' + filterConditions.join(' AND ');
+    }
+
+    return { conditions: filterConditions, params: filterParams, whereClause };
+}
+
+export async function getStandardQuestionsAfterFiltered(
+    conn: mysql.Connection,
+    id: number | undefined = undefined,
+    content: string = '',
+    answer: string = '',
+    onlyShowAnswered: boolean = false,
+    order_by: string = 'desc',
+    page: number = 1,
+    page_size: number = 5,
+): Promise<StdQuestion[]> {
+    const { whereClause: whereClauseForSubQuery, params: subQueryFilterParams } = buildStdQuestionFilter(
+        id,
+        content,
+        answer,
+        onlyShowAnswered
+    );
+
+    const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    const offset = (page - 1) * page_size;
+
+    const paginatedStdQuestionIdsQuery = `
+        SELECT DISTINCT sq_filter.id
+        FROM std_question sq_filter
+        JOIN std_question_version sqv_filter ON sq_filter.id = sqv_filter.std_question_id
+        LEFT JOIN std_answer sa_filter ON sqv_filter.id = sa_filter.std_question_version_id
+        ${whereClauseForSubQuery}
+        ORDER BY sq_filter.id ${orderDirection}
+        LIMIT ${page_size}
+        OFFSET ${offset}
+    `;
+
+    const [idRows] = await conn.execute(paginatedStdQuestionIdsQuery, [...subQueryFilterParams]);
+
+    if (!idRows || (idRows as any[]).length === 0) {
+        return [];
+    }
+    const stdQuestionIds = (idRows as any[]).map(row => row.id);
+
+    const mainQuery = `
+        SELECT sq.id          AS std_q_id,
+               sqv.id         AS version_id,
+               sqv.version    AS version_name,
+               sqv.created_at AS version_created_at,
+               sqv.content    AS version_content,
+               sqv.category   AS version_category,
+               t.tag          AS tag_name,
+               sa.id          AS answer_id,
+               sa.content     AS answer_content,
+               sp.content     AS sp_content,
+               sp.score       AS sp_score
+        FROM std_question sq
+                 JOIN
+             std_question_version sqv ON sq.id = sqv.std_question_id
+                 LEFT JOIN
+             question_tag qt ON sqv.id = qt.std_question_version_id
+                 LEFT JOIN
+             tag t ON qt.tag_id = t.id
+                 LEFT JOIN
+             std_answer sa ON sqv.id = sa.std_question_version_id
+                 LEFT JOIN
+             scoring_point sp ON sa.id = sp.std_answer_id
+        WHERE sq.id IN (${stdQuestionIds.map(() => '?').join(',')})
+        ORDER BY FIELD(sq.id, ${stdQuestionIds.map(() => '?').join(',')}),
+                 sqv.id,
+                 sa.id,
+                 t.tag,
+                 sp.content, sp.score
+    `;
+    const mainQueryParams = [...stdQuestionIds, ...stdQuestionIds];
+    const [detailRows] = await conn.execute(mainQuery, mainQueryParams);
+
+    const questionsMap = new Map<number, StdQuestion>();
+    const versionsMap = new Map<number, StdQuestionVersion>();
+    const answersMap = new Map<number, StdAnswer>();
+
+    for (const row of (detailRows as any[])) {
+        let stdQuestion = questionsMap.get(row.std_q_id);
+        if (!stdQuestion) {
+            stdQuestion = {
+                id: row.std_q_id,
+                versions: [],
+            };
+            questionsMap.set(row.std_q_id, stdQuestion);
+        }
+
+        let version = versionsMap.get(row.version_id);
+        if (!version) {
+            version = {
+                id: row.version_id,
+                version: row.version_name,
+                createdAt: new Date(row.version_created_at),
+                content: row.version_content,
+                category: row.version_category,
+                tags: [],
+                answer: undefined,
+            };
+            versionsMap.set(row.version_id, version);
+            stdQuestion.versions.push(version);
+        }
+
+        if (row.tag_name && version.tags && !version.tags.includes(row.tag_name)) {
+            version.tags.push(row.tag_name);
+        }
+
+        if (row.answer_id) {
+            let stdAnswer = answersMap.get(row.answer_id);
+            if (!stdAnswer) {
+                stdAnswer = {
+                    id: row.answer_id,
+                    content: row.answer_content,
+                    scoringPoints: [],
+                };
+                answersMap.set(row.answer_id, stdAnswer);
+                if (version) {
+                    version.answer = stdAnswer;
+                }
+            }
+
+            if (row.sp_content !== null && row.sp_score !== null && stdAnswer) {
+                const scoringPoint: ScoringPoint = {
+                    content: row.sp_content,
+                    score: Number(row.sp_score),
+                };
+                if (!stdAnswer.scoringPoints.some(sp => sp.content === scoringPoint.content && sp.score === scoringPoint.score)) {
+                    stdAnswer.scoringPoints.push(scoringPoint);
+                }
+            }
+        }
+    }
+
+    const result: StdQuestion[] = stdQuestionIds
+        .map(id => questionsMap.get(id))
+        .filter((q): q is StdQuestion => q !== undefined);
+
+    return result;
+}
+
+export async function getTotalStandardQuestionsAfterFiltered(
+    conn: mysql.Connection,
+    id: number | undefined = undefined,
+    content: string = '',
+    answer: string = '',
+    onlyShowAnswered: boolean = false,
+): Promise<number> {
+    const { whereClause, params } = buildStdQuestionFilter(
+        id,
+        content,
+        answer,
+        onlyShowAnswered
+    );
+
+    // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
+    // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的别名一致。
+    // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数，或者不使用别名。
+    // 为了简单起见，这里直接替换查询中的别名以匹配 buildStdQuestionFilter 的输出。
+    // 一个更健壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
+
+    // 当前 buildStdQuestionFilter 使用的别名是：
+    // std_question -> sq_filter
+    // std_question_version -> sqv_filter
+    // std_answer -> sa_filter
+
+    // 因此，这里的 JOIN 子句也需要使用这些别名
+    let query = `
+        SELECT COUNT(DISTINCT sq_filter.id) as total
+        FROM std_question sq_filter
+        JOIN std_question_version sqv_filter ON sq_filter.id = sqv_filter.std_question_id
+        LEFT JOIN std_answer sa_filter ON sqv_filter.id = sa_filter.std_question_version_id
+        ${whereClause}
+    `;
+
+    const [rows] = await conn.execute(query, params);
+    return (rows as any[])[0].total;
+}
 
 export async function getTagsByQuestionVersionId(versionId: number, conn: mysql.Connection) {
     const [rows] = await conn.execute(`

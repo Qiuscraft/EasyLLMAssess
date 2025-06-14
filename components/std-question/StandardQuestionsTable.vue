@@ -313,7 +313,7 @@ watch (isModalOpen, (newValue) => {
     </UModal>
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
-      {{ selected_id_list.length || 0 }} / {{ totalNoFilter }} row(s) selected.
+      <div>{{ selected_id_list.length || 0 }} / {{ totalNoFilter }} total questions selected.</div>
     </div>
   </div>
 </template>

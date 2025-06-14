@@ -42,8 +42,8 @@ watch(props.questions, () => {
 <template>
   <UPageCard title="Standard Questions">
     <UPageCard
-      v-for="sq in props.questions"
-      :description="`Standard Answer: ${selectedVersion[sq.id].answer.content}`"
+        v-for="sq in props.questions"
+        :description="`Standard Answer: ${selectedVersion[sq.id].answer?.content}`"
     >
       <template #header>
         <div class="flex items-center gap-2">
@@ -57,19 +57,19 @@ watch(props.questions, () => {
         </div>
       </template>
       <UTable
-        :data="selectedVersion[sq.id].answer.scoringPoints"
-        :columns="[
-          {
-            accessorKey: 'content',
-            header: 'Scoring Point',
-            cell: ({ row }) => row.getValue('content')
-          },
-          {
-            accessorKey: 'score',
-            header: 'Score',
-            cell: ({ row }) => row.getValue('score')
-          }
-        ]"
+          :data="selectedVersion[sq.id].answer?.scoringPoints"
+          :columns="[
+        {
+          accessorKey: 'content',
+          header: 'Scoring Point',
+          cell: ({ row }) => row.getValue('content')
+        },
+        {
+          accessorKey: 'score',
+          header: 'Score',
+          cell: ({ row }) => row.getValue('score')
+        }
+      ]"
       />
     </UPageCard>
   </UPageCard>

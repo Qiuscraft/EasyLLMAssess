@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {StdQuestion, ScoringPoint, StdAnswer, StdQuestionVersion} from "~/server/types/mysql";
+import {ScoringPoint, StdAnswer, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import {InsertingScoringPoint} from "~/server/types/inserting";
 
 export async function getStandardQuestions(
@@ -271,11 +271,9 @@ export async function getStandardQuestionsAfterFiltered(
         }
     }
 
-    const result: StdQuestion[] = stdQuestionIds
+    return stdQuestionIds
         .map(id => questionsMap.get(id))
         .filter((q): q is StdQuestion => q !== undefined);
-
-    return result;
 }
 
 export async function getTotalStandardQuestionsAfterFiltered(

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {Dataset} from "~/server/types/mysql";
+import type {Dataset, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
 import {UButton, UInput} from "#components";
@@ -56,6 +56,26 @@ onMounted(async () => {
 })
 
 const viewingRow = ref<Dataset | null>(null)
+const formattedQuestions = computed<StdQuestion[]>(() => {
+  if (!viewingRow.value) return [];
+
+  // 将questionVersions转换为StdQuestion格式
+  const questionVersionsMap = new Map<number, StdQuestionVersion[]>();
+
+  // 按stdQuestionId分组
+  viewingRow.value.questionVersions.forEach(version => {
+    if (!questionVersionsMap.has(version.stdQuestionId)) {
+      questionVersionsMap.set(version.stdQuestionId, []);
+    }
+    questionVersionsMap.get(version.stdQuestionId)?.push(version);
+  });
+
+  // 转换为StdQuestion数组
+  return Array.from(questionVersionsMap.entries()).map(([id, versions]) => ({
+    id,
+    versions
+  }));
+})
 
 const columns: TableColumn<Dataset>[] = [
   {
@@ -181,7 +201,7 @@ const columnPinning = ref({
           :title="`${viewingRow.name} - ${viewingRow.version}`"
           :description="`Created At: ${viewingRow.created_at}`"
       >
-        <StdQuestionsCard :questions="viewingRow.questions" />
+        <StdQuestionsCard :questions="formattedQuestions" />
       </UPageCard>
     </template>
   </UModal>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type CandidateAnswer} from "~/server/types/mysql";
-import type {InsertingPoint} from "~/server/types/inserting";
+import type {InsertingScoringPoint} from "~/server/types/inserting";
 
 const props = defineProps({
   open: {
@@ -32,7 +32,7 @@ watch(() => props.answer, (newAnswer) => {
   }
 }, { immediate: true })
 
-const insertingPoints = ref<InsertingPoint[]>([
+const insertingPoints = ref<InsertingScoringPoint[]>([
   { content: '', score: 1 }
 ]);
 

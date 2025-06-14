@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {SrcQuestion, StdQuestion, Point, SrcAnswer} from "~/server/types/mysql";
+import {SrcQuestion, StdQuestion, ScoringPoint, SrcAnswer} from "~/server/types/mysql";
 
 export async function getData(): Promise<SrcQuestion[]> {
     return await withConnection(async (conn: mysql.Connection) => {
@@ -59,7 +59,7 @@ export async function getData(): Promise<SrcQuestion[]> {
 
         // 处理评分点并关联到标准问题
         for (const row of pointRows as any[]) {
-            const point: Point = {
+            const point: ScoringPoint = {
                 id: row.id,
                 content: row.content,
                 score: row.score

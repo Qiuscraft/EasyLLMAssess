@@ -1,25 +1,10 @@
-import {InsertingPoint} from "~/server/types/inserting";
+import {InsertingScoringPoint} from "~/server/types/inserting";
 
-/**
- * 评分点接口 - 对应数据库中的 point 表
- */
-export interface Point extends InsertingPoint {
+export interface SrcQuestion {
     id: number;
-}
-
-/**
- * 标准问题接口 - 对应数据库中的 std_question 表
- */
-export interface StdQuestion {
-    id: number;
-    content: string;  // 问题内
-    answer: string;    // 答案内容
-    points: Point[];   // 评分点数组
-}
-
-export interface StdQuestionWithoutAnswer {
-    id: number;
-    content: string;  // 问题内
+    content: string;
+    stdQuestions: StdQuestion[]; // 标准问题数组
+    answers: SrcAnswer[];
 }
 
 export interface SrcAnswer {
@@ -27,14 +12,33 @@ export interface SrcAnswer {
     content: string;
 }
 
-/**
- * 源问题接口 - 对应数据库中的 src_question 表
- */
-export interface SrcQuestion {
+export interface StdQuestion {
+    id: number;
+    versions: StdQuestionVersion[];
+}
+
+export interface StdQuestionVersion {
+    id: number;
+    version: string;
+    createdAt: Date;
+    content: string; // 问题内容
+    answer: StdAnswer; // 答案内容
+    category: string | undefined;
+    tags: string[] | undefined;
+}
+
+export interface StdAnswer {
     id: number;
     content: string;
-    stdQuestions: StdQuestion[]; // 标准问题数组
-    answers: SrcAnswer[];
+    scoringPoints: ScoringPoint[]; // 评分点数组
+}
+
+export interface ScoringPoint extends InsertingScoringPoint {
+}
+
+export interface StdQuestionWithoutAnswer {
+    id: number;
+    content: string;  // 问题内
 }
 
 export interface Dataset {

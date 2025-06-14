@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
             message: 'success',
         }
     } catch (error) {
+        console.error(error);
         // 返回错误响应
         return {
             success: false,

@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {SrcQuestion, StdQuestion, Point, SrcAnswer} from "~/server/types/mysql";
+import {ScoringPoint, SrcAnswer, SrcQuestion, StdAnswer, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 
 export async function getSourceQuestions(
     id: number | undefined = undefined,
@@ -36,85 +36,114 @@ export async function getSourceQuestions(
             `,
             [idParam, idParam, `%${content}%`]
         );
-        const srcQuestions: { [key: number]: SrcQuestion } = {};
 
-        for (const row of srcRows as any[]) {
-            srcQuestions[row.id] = {
-                id: row.id,
-                content: row.content,
-                stdQuestions: [],
-                answers: [],
-            };
-        }
-
-        // 3. 获取所有标准问题
-        const [stdRows] = await conn.execute(`
-            SELECT sq.id, sq.content, sq.answer, sq.src_id
-            FROM std_question sq
-                     JOIN src_question src ON sq.src_id = src.id
-        `);
-
-        const stdQuestions: { [key: number]: StdQuestion } = {};
-
-        for (const row of stdRows as any[]) {
-            const stdQuestion: StdQuestion = {
-                id: row.id,
-                content: row.content,
-                answer: row.answer,
-                points: []
-            };
-
-            stdQuestions[row.id] = stdQuestion;
-
-            if (srcQuestions[row.src_id]) {
-                srcQuestions[row.src_id].stdQuestions.push(stdQuestion);
-            }
-        }
-
-        // 4. 获取所有评分点和关联
-        const [pointRows] = await conn.execute(`
-            SELECT p.id, p.content, p.score, sqp.std_question_id
-            FROM point p
-                     JOIN std_question_point sqp ON p.id = sqp.point_id
-        `);
-
-        for (const row of pointRows as any[]) {
-            const point: Point = {
-                id: row.id,
-                content: row.content,
-                score: row.score
-            };
-
-            if (stdQuestions[row.std_question_id]) {
-                stdQuestions[row.std_question_id].points.push(point);
-            }
-        }
-
-        // 5. get src answer
-        const [answerRows] = await conn.execute(`
-            SELECT
-                sa.id, sa.content, sa.src_question_id
-            FROM
-                src_answer sa
-                    JOIN
-                src_question src ON sa.src_question_id = src.id
-        `);
-
-        for (const row of answerRows as any[]) {
-            const answer: SrcAnswer = {
-                id: row.id,
-                content: row.content,
-            };
-
-            // 将标准问题添加到对应的源问题中
-            if (srcQuestions[row.src_question_id]) {
-                srcQuestions[row.src_question_id].answers.push(answer);
-            }
+        const srcQuestions: SrcQuestion[] = [];
+        for (const question of srcRows as any[]) {
+            srcQuestions.push({
+                id: question.id,
+                content: question.content,
+                stdQuestions: await getStdQuestionBySrcQuestionId(question.id, conn),
+                answers: await getSrcAnswersBySrcQuestionId(question.id, conn),
+            });
         }
 
         return {
             total: total,
-            "src-questions": Object.values(srcQuestions),
+            "src-questions": srcQuestions,
         };
     });
+}
+
+async function getTagsByQuestionVersionId(versionId: number, conn: mysql.Connection) {
+    const [rows] = await conn.execute(`
+        SELECT t.id, t.tag
+        FROM tag t
+        JOIN question_tag qt ON t.id = qt.tag_id
+        WHERE qt.std_question_version_id = ?
+        `, [versionId]
+    );
+
+    return (rows as any[]).map((row: any) => row.tag);
+}
+
+async function getStdQuestionByStdQuestionId(stdQuestionId: number, conn: mysql.Connection) {
+    let question: StdQuestion = {
+        id: stdQuestionId,
+        versions: [],
+    }
+
+    const [versionRows] = await conn.execute(`
+                SELECT id, version, created_at, content, category
+                FROM std_question_version
+                WHERE std_question_id = ?
+            `, [stdQuestionId])
+    for (const versionRow of versionRows as any[]) {
+        const stdQuestionVersionId = versionRow.id;
+
+        const [answerRows] = await conn.execute(`
+                    SELECT id, content
+                    FROM std_answer
+                    WHERE std_question_version_id = ?
+                `, [stdQuestionVersionId]);
+        const answerRow = (answerRows as any[])[0];
+
+        const [scoringPointsRows] = await conn.execute(`
+                    SELECT content, score
+                    FROM scoring_point
+                    WHERE std_answer_id = ?
+                `, [answerRow.id]);
+
+        const scoringPoints: ScoringPoint[] = (scoringPointsRows as any[]).map((pointRow: any) => ({
+            content: pointRow.content,
+            score: pointRow.score,
+        }));
+
+        const answer: StdAnswer = {
+            id: answerRow.id,
+            content: answerRow.content,
+            scoringPoints: scoringPoints,
+        }
+
+        const tags = await getTagsByQuestionVersionId(stdQuestionVersionId, conn);
+
+        let version: StdQuestionVersion = {
+            id: stdQuestionVersionId,
+            version: versionRow.version,
+            createdAt: versionRow.created_at,
+            content: versionRow.content,
+            category: versionRow.category || undefined,
+            tags: tags,
+            answer: answer,
+        }
+        question.versions.push(version);
+    }
+    return question;
+}
+
+async function getStdQuestionBySrcQuestionId(srcQuestionId: number, conn: mysql.Connection): Promise<StdQuestion[]> {
+    const [rows] = await conn.execute(`
+        SELECT id
+        FROM std_question
+        WHERE src_id = ?
+    `, [srcQuestionId]);
+
+    const stdQuestions: StdQuestion[] = [];
+    for (const row of rows as any[]) {
+        const stdQuestion = await getStdQuestionByStdQuestionId(row.id, conn);
+        stdQuestions.push(stdQuestion);
+    }
+    return stdQuestions;
+}
+
+async function getSrcAnswersBySrcQuestionId(srcQuestionId: number, conn: mysql.Connection): Promise<SrcAnswer[]> {
+    const [rows] = await conn.execute(`
+        SELECT id, content
+        FROM src_answer
+        WHERE src_question_id = ?
+    `, [srcQuestionId]);
+
+    return (rows as any[]).map((row: any) => ({
+        id: row.id,
+        content: row.content,
+    }));
 }

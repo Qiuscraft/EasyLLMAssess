@@ -1,7 +1,7 @@
 import {withConnection} from "~/server/db/connection";
 import mysql from "mysql2/promise";
-import {StdQuestion, Point} from "~/server/types/mysql";
-import {InsertingPoint} from "~/server/types/inserting";
+import {StdQuestion, ScoringPoint} from "~/server/types/mysql";
+import {InsertingScoringPoint} from "~/server/types/inserting";
 
 /**
  * 处理标准问题查询并关联评分点的辅助函数
@@ -78,7 +78,7 @@ async function processStandardQuestions(
     );
 
     for (const row of pointRows as any[]) {
-        const point: Point = {
+        const point: ScoringPoint = {
             id: row.id,
             content: row.content,
             score: row.score
@@ -147,7 +147,7 @@ export async function getStandardQuestionsNoAnswer(
 export async function setStandardAnswer(
     id: number,
     answer: string,
-    scoringPoints: InsertingPoint[],
+    scoringPoints: InsertingScoringPoint[],
 ): Promise<void> {
     return await withConnection(async (conn: mysql.Connection) => {
         try {

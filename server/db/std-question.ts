@@ -3,9 +3,6 @@ import mysql from "mysql2/promise";
 import {StdQuestion, ScoringPoint, StdAnswer, StdQuestionVersion} from "~/server/types/mysql";
 import {InsertingScoringPoint} from "~/server/types/inserting";
 
-/**
- * 处理标准问题查询并关联评分点的辅助函数
- */
 async function processStandardQuestions(
     conn: mysql.Connection,
     whereClause: string,

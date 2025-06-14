@@ -33,7 +33,9 @@ export interface StdAnswer {
     scoringPoints: ScoringPoint[]; // 评分点数组
 }
 
-export interface ScoringPoint extends InsertingScoringPoint {
+export interface ScoringPoint {
+    content: string;  // 评分点内容
+    score: number;    // 评分点分数
 }
 
 export interface StdQuestionWithoutAnswer {

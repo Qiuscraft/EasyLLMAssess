@@ -68,7 +68,7 @@ export async function setStandardAnswer(
                     [point.content, point.score]
                 );
 
-                // 获取新插入的评分点ID
+                // 获取新插��的评分点ID
                 const pointId = (result as mysql.ResultSetHeader).insertId;
 
                 // 建立问题与评分点的关联
@@ -161,8 +161,9 @@ export async function getStandardQuestionsAfterFiltered(
     const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
     const offset = (page - 1) * page_size;
 
-    const paginatedStdQuestionIdsQuery = `
-        SELECT DISTINCT sq_filter.id
+    // 第一步：获取满足条件的问题ID和版本ID
+    const paginatedStdQuestionAndVersionQuery = `
+        SELECT DISTINCT sq_filter.id AS question_id, sqv_filter.id AS version_id
         FROM std_question sq_filter
         JOIN std_question_version sqv_filter ON sq_filter.id = sqv_filter.std_question_id
         LEFT JOIN std_answer sa_filter ON sqv_filter.id = sa_filter.std_question_version_id
@@ -172,12 +173,29 @@ export async function getStandardQuestionsAfterFiltered(
         OFFSET ${offset}
     `;
 
-    const [idRows] = await conn.execute(paginatedStdQuestionIdsQuery, [...subQueryFilterParams]);
+    const [idRows] = await conn.execute(paginatedStdQuestionAndVersionQuery, [...subQueryFilterParams]);
 
     if (!idRows || (idRows as any[]).length === 0) {
         return [];
     }
-    const stdQuestionIds = (idRows as any[]).map(row => row.id);
+
+    // 提取问题ID和版本ID
+    const filteredPairs = (idRows as any[]).map(row => ({
+        questionId: row.question_id,
+        versionId: row.version_id
+    }));
+
+    // 获取唯一的问题ID列表
+    const stdQuestionIds = [...new Set(filteredPairs.map(pair => pair.questionId))];
+
+    // 创建问题ID到其符合条件的版本ID的映射
+    const questionToVersionsMap = new Map<number, number[]>();
+    for (const pair of filteredPairs) {
+        if (!questionToVersionsMap.has(pair.questionId)) {
+            questionToVersionsMap.set(pair.questionId, []);
+        }
+        questionToVersionsMap.get(pair.questionId)!.push(pair.versionId);
+    }
 
     const mainQuery = `
         SELECT sq.id          AS std_q_id,
@@ -203,13 +221,21 @@ export async function getStandardQuestionsAfterFiltered(
                  LEFT JOIN
              scoring_point sp ON sa.id = sp.std_answer_id
         WHERE sq.id IN (${stdQuestionIds.map(() => '?').join(',')})
+        AND sqv.id IN (${filteredPairs.map(() => '?').join(',')})
         ORDER BY FIELD(sq.id, ${stdQuestionIds.map(() => '?').join(',')}),
                  sqv.id,
                  sa.id,
                  t.tag,
                  sp.content, sp.score
     `;
-    const mainQueryParams = [...stdQuestionIds, ...stdQuestionIds];
+
+    // 构建查询参数：问题ID + 版本ID + 问题ID（用于ORDER BY FIELD）
+    const mainQueryParams = [
+        ...stdQuestionIds,
+        ...filteredPairs.map(pair => pair.versionId),
+        ...stdQuestionIds
+    ];
+
     const [detailRows] = await conn.execute(mainQuery, mainQueryParams);
 
     const questionsMap = new Map<number, StdQuestion>();
@@ -394,3 +420,4 @@ export async function getStdQuestionBySrcQuestionId(srcQuestionId: number, conn:
     }
     return stdQuestions;
 }
+

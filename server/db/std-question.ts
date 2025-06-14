@@ -107,6 +107,7 @@ function buildStdQuestionFilter(
 
     if (onlyShowAnswered) {
         filterConditions.push(`${answerTableAlias}.id IS NOT NULL`);
+        filterConditions.push(`${answerTableAlias}.content IS NOT NULL AND ${answerTableAlias}.content != ''`);
         if (answer) {
             filterConditions.push(`${answerTableAlias}.content LIKE ?`);
             filterParams.push(`%${answer}%`);

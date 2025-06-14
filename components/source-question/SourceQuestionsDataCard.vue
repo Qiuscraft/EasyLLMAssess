@@ -3,9 +3,9 @@ import type { SrcQuestion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
 import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 import SrcAnswerCard from "~/components/source-question/SrcAnswerCard.vue";
-import {h} from "vue";
-import {UButton, UInput} from "#components";
+import {UButton} from "#components";
 import Pagination from "~/components/common/Pagination.vue";
+import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
 
 const data = ref<SrcQuestion[]>([]);
 const loading = ref(true);
@@ -26,7 +26,7 @@ const searchName = ref('');
 const columns: TableColumn<SrcQuestion>[] = [
   {
     accessorKey: 'id',
-    header: ({ column }) => {
+    header: ({ column }: { column: any }) => {
       const isSorted = column.getIsSorted()
 
       return h(UButton, {
@@ -42,25 +42,18 @@ const columns: TableColumn<SrcQuestion>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => row.getValue('id'),
+    cell: ({ row }: { row: any }) => row.getValue('id'),
   },
   {
     accessorKey: 'content',
     header: ({  }) => {
-      return h(UInput, {
+      return h(FloatingLabeledInput, {
         modelValue: searchName.value,
         'onUpdate:modelValue': (newValue: string) => {
-          searchName.value = newValue; // 更新绑定的值
+          searchName.value = newValue;
         },
-        placeholder: "",
-        ui: { base: "peer" },
-      }, [
-        h("label", {
-          class: "pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal",
-        }, [
-          h("span", { class: "inline-flex bg-default px-1" }, "Question")
-        ])
-      ])
+        label: "Question"
+      })
     },
     cell: ({ row }: { row: any }) => h('div', {
       innerHTML: row.getValue('content'),
@@ -76,7 +69,7 @@ const columns: TableColumn<SrcQuestion>[] = [
   {
     id: 'view',
     header: 'Actions',
-    cell: ({ row }) => h(UButton, {
+    cell: ({ row }: { row: any }) => h(UButton, {
       label: 'View',
       color: 'neutral',
       variant: 'subtle',

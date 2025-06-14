@@ -67,6 +67,6 @@ CREATE TABLE dataset_version (
 
 CREATE TABLE dataset_question (
     version_id INT NOT NULL REFERENCES dataset_version(id),
-    std_question_id INT NOT NULL REFERENCES std_question(id),
-    PRIMARY KEY (version_id, std_question_id)
+    std_question_version_id INT NOT NULL REFERENCES std_question_version(id),
+    PRIMARY KEY (version_id, std_question_version_id)
 );

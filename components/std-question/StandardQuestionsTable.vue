@@ -227,11 +227,31 @@ const columnPinning = ref({
   left: [],
   right: ['view']
 })
-
-const selected_id_list = computed(() => {
+computed(() => {
   return Object.keys(rowSelection.value)
+      .filter(id => rowSelection.value[Number(id)])
+      .map(Number);
+});
+const selected_version_id_list = computed(() => {
+  // 获取选中行的问题ID
+  const selectedQuestionIds = Object.keys(rowSelection.value)
     .filter(id => rowSelection.value[Number(id)])
     .map(Number);
+
+  // 将问题ID转换为对应的当前选中版本的版本ID
+  const versionIds: number[] = [];
+  selectedQuestionIds.forEach(questionId => {
+    const question = data.value.find(q => q.id === questionId);
+    if (question) {
+      const versionIndex = currentVersionIndices.value[questionId] || 0;
+      const version = question.versions[versionIndex];
+      if (version) {
+        versionIds.push(version.id);
+      }
+    }
+  });
+
+  return versionIds;
 })
 
 const handleSubmit = () => {
@@ -268,7 +288,7 @@ watch (isModalOpen, (newValue) => {
 <template>
   <UCheckbox v-model="onlyShowQuestionWithAnswer" color="primary" label="Only show the questions that have standard answer" />
   <div class="flex-1 w-full">
-    <CreateDatasetButton :id_list="selected_id_list" @submit="handleSubmit" />
+    <CreateDatasetButton :id_list="selected_version_id_list" @submit="handleSubmit" />
 
     <UTable
         sticky
@@ -313,7 +333,7 @@ watch (isModalOpen, (newValue) => {
     </UModal>
 
     <div class="px-4 py-3.5 border-t border-accented text-sm text-muted">
-      <div>{{ selected_id_list.length || 0 }} / {{ totalNoFilter }} total questions selected.</div>
+      <div>{{ selected_version_id_list.length || 0 }} / {{ totalNoFilter }} total question versions selected.</div>
     </div>
   </div>
 </template>

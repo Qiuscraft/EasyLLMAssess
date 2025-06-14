@@ -14,7 +14,7 @@ async function handleSubmit() {
     body: {
       dataset_name: name.value,
       version_name: version.value,
-      std_questions: props.id_list,
+      std_question_versions: props.id_list,
     }
   });
   if (!result.error_message) {

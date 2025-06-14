@@ -47,7 +47,7 @@ export interface Dataset {
     name: string;
     version: string;
     created_at: string;
-    questions: StdQuestion[];
+    questionVersions: StdQuestionVersion[];
 }
 
 export interface CandidateAnswer {

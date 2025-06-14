@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
         const datasetName: string = body.dataset_name;
         const versionName: string = body.version_name;
-        const id: number[] = body.std_questions;
+        const id: number[] = body.std_question_versions;
 
         // 调用导入函数处理数据
         return await createDataset(datasetName, versionName, id);

@@ -237,9 +237,5 @@ watch(viewingRow, () => {
   </div>
 </template>
 
-
 <style scoped>
 </style>
-
-
-

@@ -50,7 +50,7 @@ CREATE TABLE candidate_answer (
     id INT AUTO_INCREMENT PRIMARY KEY,
     author VARCHAR(63) NOT NULL,
     content TEXT NOT NULL,
-    std_question_id INT NOT NULL REFERENCES std_question(id)
+    std_question_version_id INT NOT NULL REFERENCES std_question_version(id)
 );
 
 CREATE TABLE dataset (

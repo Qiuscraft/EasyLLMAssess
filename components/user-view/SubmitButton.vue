@@ -1,11 +1,24 @@
 <script setup lang="ts">
-const props = defineProps(['question']);
+import type { StdQuestion, StdQuestionVersion } from "~/server/types/mysql";
+
+const props = defineProps({
+  question: {
+    type: Object as () => StdQuestion & { currentVersion?: StdQuestionVersion },
+    required: true
+  }
+});
 const toast = useToast();
 
 const open = ref(false);
 const username = ref('')
 const answer = ref('')
 const submitting = ref(false);
+
+// 获取当前版本
+const currentVersion = computed(() => {
+  return props.question.currentVersion ||
+    (props.question.versions && props.question.versions.length > 0 ? props.question.versions[0] : null);
+});
 
 const close = () => {
   open.value = false;
@@ -20,12 +33,22 @@ const handleOpenChange = (value: boolean) => {
 }
 
 const handleSubmit = async () => {
+  if (!currentVersion.value) {
+    toast.add({
+      title: "Error",
+      description: "No question version found",
+      color: 'error',
+    });
+    return;
+  }
+
   submitting.value = true;
   try {
     await $fetch('/api/v1/candidate-answer', {
       method: 'POST',
       body: {
         std_question_id: props.question.id,
+        std_question_version_id: currentVersion.value.id,
         username: username.value,
         answer: answer.value,
       }
@@ -37,7 +60,7 @@ const handleSubmit = async () => {
   } catch (error) {
     toast.add({
       title: "Answer Submitted Failed. Please contact support.",
-      description: error.message,
+      description: error instanceof Error ? error.message : "Unknown error",
       color: 'error',
     });
   } finally {
@@ -48,15 +71,15 @@ const handleSubmit = async () => {
 </script>
 
 <template>
+  <UButton label="Submit Answer" color="neutral" variant="subtle" @click="open = true" />
+
   <UModal
     v-model:open="open"
-    title="Submit Your Answer"
-    :description="`For Standard Question #${props.question.id}: ${props.question.content}`"
+    :title="`Submit Your Answer`"
+    :description="currentVersion?.content || 'No question content available'"
     :ui="{ footer: 'justify-end' }"
     @update:open="handleOpenChange"
   >
-    <UButton label="Submit Answer" color="neutral" variant="subtle" />
-
     <template #body>
       <UInput v-model="username" placeholder="" :ui="{ base: 'peer' }" class="w-full">
         <label class="pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal">

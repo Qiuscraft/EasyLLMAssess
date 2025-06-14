@@ -1,15 +1,22 @@
 <script setup lang="ts">
+import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui-pro'
 import type { StdQuestion } from "~/server/types/mysql";
 import { UButton } from "#components";
 import SubmitButton from "~/components/user-view/SubmitButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
+import { responseToStdQuestions } from "~/utils/std-question";
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
+
+const USelect = resolveComponent('USelect')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
 const total = ref(0);
 const totalNoFilter = ref(0);
+
+// 存储每行当前显示的版本索引
+const currentVersionIndices = ref<Record<number, number>>({});
 
 const sort_by = ref('desc')
 const content = ref('')
@@ -26,10 +33,19 @@ async function fetchData() {
         sort_by: sort_by.value,
         content: content.value,
         page: page.value,
+        only_show_no_answered: true
       }
     });
 
     data.value = responseToStdQuestions(response.std_questions);
+
+    // 初始化每行当前显示的版本索引为0
+    data.value.forEach(question => {
+      if (!currentVersionIndices.value[question.id]) {
+        currentVersionIndices.value[question.id] = 0;
+      }
+    });
+
     total.value = response.total || 0;
     totalNoFilter.value = response.total_no_filter || 0;
   } catch (error) {
@@ -42,6 +58,31 @@ async function fetchData() {
     loading.value = false;
   }
 }
+
+// 根据问题ID和当前版本索引获取当前显示的版本
+const getCurrentVersion = (questionId: number) => {
+  const question = data.value.find(q => q.id === questionId);
+  if (!question) return null;
+
+  const versionIndex = currentVersionIndices.value[questionId] || 0;
+  return question.versions[versionIndex];
+};
+
+// 获取指定问题的版本选项
+const getVersionOptions = (questionId: number) => {
+  const question = data.value.find(q => q.id === questionId);
+  if (!question) return [];
+
+  return question.versions.map((version, index) => ({
+    label: `${version.version}`,
+    value: index
+  }));
+};
+
+// 更改当前显示的版本
+const changeVersion = (questionId: number, versionIndex: number) => {
+  currentVersionIndices.value[questionId] = versionIndex;
+};
 
 const columns: TableColumn<StdQuestion>[] = [
   {
@@ -73,14 +114,41 @@ const columns: TableColumn<StdQuestion>[] = [
         label: "Question"
       })
     },
-    cell: ({ row }: { row: any }) => h('div', { innerHTML: row.getValue('content') }),
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      return h('div', { innerHTML: currentVersion?.content || '' });
+    },
+  },
+  {
+    id: 'version',
+    header: 'Version',
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const versionOptions = getVersionOptions(questionId);
+      const currentVersionIndex = currentVersionIndices.value[questionId] || 0;
+
+      return h(USelect, {
+        modelValue: currentVersionIndex,
+        items: versionOptions,
+        size: 'sm',
+        class: 'w-24',
+        'onUpdate:modelValue': (newValue: number) => {
+          changeVersion(questionId, newValue);
+        }
+      });
+    }
   },
   {
     id: 'view',
     header: 'Actions',
-    cell: ({ row }: { row: any }) => h(SubmitButton, {
-      question: row.original,
-    }),
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      return h(SubmitButton, {
+        question: currentVersion ? { ...row.original, currentVersion } : row.original,
+      });
+    },
   }
 ]
 
@@ -110,7 +178,6 @@ onMounted(async () => {
     table.value.tableApi.getColumn('id')?.toggleSorting(true);
   }
 });
-
 </script>
 
 <template>

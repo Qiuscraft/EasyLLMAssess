@@ -113,7 +113,7 @@ function buildStdQuestionFilter(
             filterParams.push(`%${answer}%`);
         }
     } else if (onlyShowNoAnswered) {
-        filterConditions.push(`${answerTableAlias}.id IS NULL`);
+        filterConditions.push(`(${answerTableAlias}.id IS NULL OR ${answerTableAlias}.content IS NULL OR ${answerTableAlias}.content = '')`);
     } else {
         if (answer) {
             filterConditions.push(`${answerTableAlias}.content LIKE ?`);
@@ -175,7 +175,7 @@ export async function getStandardQuestionsAfterFiltered(
         versionId: row.version_id
     }));
 
-    // 获取唯一的问题ID列表
+    // ���取唯一的问题ID列表
     const stdQuestionIds = [...new Set(filteredPairs.map(pair => pair.questionId))];
 
     // 创建问题ID到其符合条件的版本ID的映射

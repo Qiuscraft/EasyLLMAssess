@@ -9,11 +9,15 @@ import {responseToStdQuestions, sortStdQuestionVersionsByCreationTime} from "~/u
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
 
 const UCheckbox = resolveComponent('UCheckbox')
+const USelect = resolveComponent('USelect')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
 const total = ref(0);
 const totalNoFilter = ref(0);
+
+// 存储每行当前显示的版本索引
+const currentVersionIndices = ref<Record<number, number>>({});
 
 const sort_by = ref('desc')
 const content = ref('')
@@ -42,6 +46,14 @@ async function fetchData() {
     });
 
     data.value = responseToStdQuestions(response.std_questions);
+
+    // 初始化每行当前显示的版本索引为0
+    data.value.forEach(question => {
+      if (!currentVersionIndices.value[question.id]) {
+        currentVersionIndices.value[question.id] = 0;
+      }
+    });
+
     total.value = response.total || 0;
     totalNoFilter.value = response.total_no_filter || 0;
   } catch (error) {
@@ -62,6 +74,31 @@ onMounted(async () => {
     table.value.tableApi.getColumn('id')?.toggleSorting(true);
   }
 });
+
+// 根据问题ID和当前版本索引获取当前显示的版本
+const getCurrentVersion = (questionId: number) => {
+  const question = data.value.find(q => q.id === questionId);
+  if (!question) return null;
+
+  const versionIndex = currentVersionIndices.value[questionId] || 0;
+  return question.versions[versionIndex];
+};
+
+// 获取指定问题的版本选项
+const getVersionOptions = (questionId: number) => {
+  const question = data.value.find(q => q.id === questionId);
+  if (!question) return [];
+
+  return question.versions.map((version, index) => ({
+    label: `${version.version}`,
+    value: index
+  }));
+};
+
+// 更改当前显示的版本
+const changeVersion = (questionId: number, versionIndex: number) => {
+  currentVersionIndices.value[questionId] = versionIndex;
+};
 
 const columns: TableColumn<StdQuestion>[] = [
   {
@@ -111,7 +148,30 @@ const columns: TableColumn<StdQuestion>[] = [
         label: "Question"
       })
     },
-    cell: ({ row }: { row: any }) => h('div', { innerHTML: row.original.versions[0].content }),
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      return h('div', { innerHTML: currentVersion?.content || '' });
+    },
+  },
+  {
+    id: 'version',
+    header: 'Version',
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const versionOptions = getVersionOptions(questionId);
+      const currentVersionIndex = currentVersionIndices.value[questionId] || 0;
+
+      return h(USelect, {
+        modelValue: currentVersionIndex,
+        items: versionOptions,
+        size: 'sm',
+        class: 'w-24',
+        'onUpdate:modelValue': (newValue: number) => {
+          changeVersion(questionId, newValue);
+        }
+      });
+    }
   },
   {
     accessorKey: 'answer',
@@ -124,7 +184,11 @@ const columns: TableColumn<StdQuestion>[] = [
         label: "Answer"
       })
     },
-    cell: ({ row }: { row: any }) => h('div', { innerHTML: row.original.versions[0].answer.content }),
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      return h('div', { innerHTML: currentVersion?.answer?.content || 'No answer' });
+    },
   },
   {
     id: 'view',
@@ -177,7 +241,13 @@ const handleSubmit = () => {
 const viewingVersion = ref<StdQuestionVersion | null>(null);
 watch(viewingRow, () => {
   if (viewingRowSorted.value) {
-    viewingVersion.value = viewingRowSorted.value.versions[0];
+    // 如果有查看某一行，使用该行当前选中的版本
+    if (viewingRowSorted.value.id && currentVersionIndices.value[viewingRowSorted.value.id] !== undefined) {
+      const versionIndex = currentVersionIndices.value[viewingRowSorted.value.id];
+      viewingVersion.value = viewingRowSorted.value.versions[versionIndex];
+    } else {
+      viewingVersion.value = viewingRowSorted.value.versions[0];
+    }
   } else {
     viewingVersion.value = null;
   }

@@ -18,13 +18,17 @@ export async function importFromJsonString(json: string) {
       let stdQuestion: InsertingStdQuestion = {versions: []};
 
       for (const stdQuestionVersionItem of stdQuestionItem.versions) {
-        let scoringPoints = (stdQuestionVersionItem.answer.scoring_points || []).map((scoringPoint: InsertingScoringPoint) => ({
+        // 安全地获取 scoring_points，如果不存在则使用空数组
+        let scoringPoints = ((stdQuestionVersionItem.answer || {}).scoring_points || []).map((scoringPoint: InsertingScoringPoint) => ({
           content: scoringPoint.content,
           score: scoringPoint.score,
         }));
 
+        // 确保 answer 对象存在
+        const answerObj = stdQuestionVersionItem.answer || {};
+
         let answer: InsertingStdAnswer = {
-          content: stdQuestionVersionItem.answer.content,
+          content: answerObj.content || "", // 提供默认值避免 undefined
           scoringPoints: scoringPoints,
         }
 
@@ -133,7 +137,7 @@ async function importSrcQuestions(srcQuestions: InsertingSrcQuestion[]) {
           }
         }
 
-        // 插入源问题的答案
+        // 插入源问题��答案
         for (const answer of srcQuestion.answers) {
           await conn.execute(
             'INSERT INTO src_answer (src_question_id, content) VALUES (?, ?)',

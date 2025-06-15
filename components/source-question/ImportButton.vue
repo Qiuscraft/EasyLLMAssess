@@ -46,8 +46,8 @@ async function handleSubmit() {
 
 </script>
 <template>
-  <UModal v-model:open="open" title="Import Data" description="Upload your data json file. (Draggable)" :ui="{ footer: 'justify-end' }">
-    <UButton label="Import Data" color="neutral" variant="subtle" />
+  <UModal v-model:open="open" title="Import Source Questions" description="Upload your data json file. (Draggable)" :ui="{ footer: 'justify-end' }">
+    <UButton label="Import Source Questions" color="neutral" variant="subtle" />
 
     <template #body>
       <UInput type="file" @change="handleFileChange" />

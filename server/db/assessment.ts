@@ -8,7 +8,7 @@ export interface ScoreProcess {
   description: string;
   score: number;
   scoring_point_content: string;
-  scoring_point_max_score: number;
+  max_score: number;
 }
 
 export interface ModelAnswer {
@@ -55,9 +55,9 @@ export async function createAssessment(assessment: Assessment): Promise<number> 
           const description = scoreProcess.description || '';
           const score = scoreProcess.score || 0;
           const scoringPointContent = scoreProcess.scoring_point_content || '';
-          // 如果scoring_point_max_score为undefined，则设��为0或合适的默认值
-          const scoringPointMaxScore = scoreProcess.scoring_point_max_score !== undefined
-            ? scoreProcess.scoring_point_max_score
+          // 如果max_score为undefined，则设置���0或合适的默认值
+          const scoringPointMaxScore = scoreProcess.max_score !== undefined
+            ? scoreProcess.max_score
             : 0;
 
           await conn.execute(
@@ -137,7 +137,7 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
       modelAnswersMap.set(a.id, allModelAnswers[index]);
     });
 
-    // 构建最终返回的评测列表
+    // 构建����返回的评测列表
     return (assessments as any[]).map(a => {
       return {
         id: a.id,

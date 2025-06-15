@@ -249,15 +249,31 @@ const columns: TableColumn<Dataset>[] = [
   {
     id: 'view',
     header: 'Actions',
-    cell: ({ row }) => h(UButton, {
-      label: 'View',
-      color: 'neutral',
-      variant: 'subtle',
-      onClick: () => {
-        viewingRow.value = row.original;
-        currentViewingVersionId.value = selectedVersions.value[row.original.id];
-      }
-    })
+    cell: ({ row }) => {
+      return h('div', {
+        class: 'flex gap-2'
+      }, [
+        // 查看按钮
+        h(UButton, {
+          label: 'View',
+          color: 'neutral',
+          variant: 'subtle',
+          icon: 'i-lucide-eye',
+          onClick: () => {
+            viewingRow.value = row.original;
+            currentViewingVersionId.value = selectedVersions.value[row.original.id];
+          }
+        }),
+        // 导出按钮
+        h(UButton, {
+          label: 'Export',
+          color: 'primary',
+          variant: 'subtle',
+          icon: 'i-lucide-download',
+          onClick: () => exportDatasetVersion(row.original)
+        })
+      ]);
+    }
   },
 ]
 
@@ -269,6 +285,44 @@ const columnPinning = ref({
   left: [],
   right: ['view']
 })
+
+// 实现导出数据集版本为JSON文件的函数
+const exportDatasetVersion = (dataset: Dataset) => {
+  // 获取当前选中的数据集版本
+  const currentVersion = getCurrentDatasetVersion(dataset);
+  if (!currentVersion) {
+    useToast().add({
+      title: "Export Failed",
+      description: "No available dataset version",
+      color: 'error'
+    });
+    return;
+  }
+
+  // 创建Blob对象
+  const dataStr = JSON.stringify(currentVersion, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+
+  // 创建下载链接
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `dataset_${dataset.id}_version_${currentVersion.id}.json`;
+
+  // 模拟点击下载
+  document.body.appendChild(link);
+  link.click();
+
+  // 清理
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  useToast().add({
+    title: "Export Successful",
+    description: `Dataset version has been exported as a JSON file`,
+    color: 'success'
+  });
+}
 </script>
 
 <template>

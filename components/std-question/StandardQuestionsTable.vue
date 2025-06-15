@@ -162,6 +162,13 @@ const columns: TableColumn<StdQuestion>[] = [
       const versionOptions = getVersionOptions(questionId);
       const currentVersionIndex = currentVersionIndices.value[questionId] || 0;
 
+      // 如果只有一个版本，直接显示文本
+      if (versionOptions.length <= 1) {
+        const currentVersion = getCurrentVersion(questionId);
+        return h('div', { class: 'text-sm text-center' }, currentVersion?.version || '1');
+      }
+
+      // 有多个版本时显示选择框
       return h(USelect, {
         modelValue: currentVersionIndex,
         items: versionOptions,

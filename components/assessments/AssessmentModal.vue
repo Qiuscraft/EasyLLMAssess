@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Assessment, ModelAnswer, ScoreProcess } from "~/server/types/mysql";
+import type { Assessment, ModelAnswer, ScoreProcess, StdQuestionVersion } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro';
 import {UButton} from "#components";
 
@@ -14,6 +14,28 @@ const emit = defineEmits(['update:isOpen']);
 const open = computed({
   get: () => props.isOpen,
   set: (value) => emit('update:isOpen', value)
+});
+
+// 处理modelAnswers与问题版本的关联
+const processedModelAnswers = computed(() => {
+  if (!props.assessment?.modelAnswers || !props.assessment?.datasetVersion?.stdQuestionVersions) {
+    return [];
+  }
+
+  // 创建stdQuestionVersionId到stdQuestionVersion的映射
+  const questionVersionMap = new Map<number, StdQuestionVersion>();
+  props.assessment.datasetVersion.stdQuestionVersions.forEach(qv => {
+    questionVersionMap.set(qv.id, qv);
+  });
+
+  // 为每个modelAnswer关联对应的questionVersion
+  return props.assessment.modelAnswers.map(answer => {
+    const questionVersion = questionVersionMap.get(answer.stdQuestionVersionId);
+    return {
+      ...answer,
+      questionVersion: questionVersion || answer.questionVersion
+    };
+  });
 });
 
 const modelAnswersColumns: TableColumn<ModelAnswer>[] = [
@@ -183,7 +205,7 @@ const scoreInfo = computed(() => {
         >
           <UTable
             :columns="modelAnswersColumns"
-            :data="assessment?.modelAnswers || []"
+            :data="processedModelAnswers"
             :loading="!assessment"
             class="mt-4"
           />

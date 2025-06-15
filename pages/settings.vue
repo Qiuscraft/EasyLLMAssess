@@ -1,5 +1,36 @@
 <template>
   <div class="p-4">
+    <!-- 用户名设置 -->
+    <UCard class="w-full mb-6">
+      <template #header>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-semibold">User Settings</h2>
+        </div>
+      </template>
+      <div class="p-4">
+        <div class="relative w-full max-w-sm">
+          <UInput
+            v-model="username"
+            placeholder="Enter your username"
+            class="peer w-full"
+          >
+            <label class="pointer-events-none absolute left-0 -top-2.5 text-highlighted text-xs font-medium px-1.5 transition-all peer-focus:-top-2.5 peer-focus:text-highlighted peer-focus:text-xs peer-focus:font-medium peer-placeholder-shown:text-sm peer-placeholder-shown:text-dimmed peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-normal">
+              <span class="inline-flex bg-default px-1">Username</span>
+            </label>
+          </UInput>
+        </div>
+        <UButton
+          class="mt-4"
+          color="primary"
+          :disabled="!username"
+          @click="saveUsername"
+        >
+          Save Username
+        </UButton>
+      </div>
+    </UCard>
+
+    <!-- 模型配置标题 -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Model Configuration</h1>
       <UButton
@@ -143,8 +174,25 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 import { useModelStore, type ModelConfig } from '~/stores/modelStore'
+import { useUserStore } from '~/stores/userStore'
 resolveComponent('UBadge');
 const modelStore = useModelStore()
+const userStore = useUserStore()
+
+// 用户名设置
+const username = ref(userStore.username)
+const toast = useToast()
+
+// 保存用户名
+function saveUsername() {
+  if (username.value.trim()) {
+    userStore.setUsername(username.value.trim())
+    toast.add({
+      title: '用户名已保存',
+      color: 'success'
+    })
+  }
+}
 
 // Modal and new model related states
 const isModalOpen = ref(false)

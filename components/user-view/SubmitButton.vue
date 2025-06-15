@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { StdQuestion, StdQuestionVersion } from "~/server/types/mysql";
+import { useUserStore } from "~/stores/userStore";
 
 const props = defineProps({
   question: {
@@ -8,11 +9,20 @@ const props = defineProps({
   }
 });
 const toast = useToast();
+const userStore = useUserStore();
 
 const open = ref(false);
 const username = ref('')
 const answer = ref('')
 const submitting = ref(false);
+
+// 监听open变化，确保在打开对话框时设置用户名
+watch(open, (newValue) => {
+  if (newValue) {
+    // 打开对话框时自动填充已保存的用户名
+    username.value = userStore.username || '';
+  }
+}, { immediate: true });
 
 // 获取当前版本
 const currentVersion = computed(() => {
@@ -26,8 +36,11 @@ const close = () => {
 }
 
 const handleOpenChange = (value: boolean) => {
-  if (!value) {
-    username.value = '';
+  if (value) {
+    // 打开对话框时自动填充已保存的用户名
+    username.value = userStore.username || '';
+  } else {
+    // 重置答案，但保留用户名
     answer.value = '';
   }
 }

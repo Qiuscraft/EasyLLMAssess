@@ -32,6 +32,11 @@ const items = ref<NavigationMenuItem[]>([
     icon: 'i-lucide-user',
     to: '/user-view',
   },
+  {
+    label: 'Settings',
+    icon: 'i-lucide-settings',
+    to: '/settings',
+  },
 ])
 </script>
 

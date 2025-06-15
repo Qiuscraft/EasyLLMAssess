@@ -14,7 +14,17 @@ export default defineNuxtConfig({
       database: 'EasyLLMAssess',
     },
   },
-  modules: ['@nuxt/ui-pro'],
+  modules: [
+      '@nuxt/ui-pro',
+      '@pinia/nuxt',
+      '@pinia-plugin-persistedstate/nuxt'
+  ],
+  pinia: {
+    storesDirs: ['./store/**'],
+  },
+  piniaPersistedstate: {
+    storage: 'cookies',
+  },
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [

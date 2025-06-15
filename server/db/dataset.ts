@@ -231,3 +231,105 @@ export async function getDatasets(id: number | undefined = undefined,
     };
   });
 }
+
+export async function getDatasetVersionByVersionId(conn: mysql.Connection, versionId: number) {
+  // 获取数据集版本的基础信息
+  const [versionRows] = await conn.execute(
+    `SELECT dv.id, dv.name as version, dv.created_at, d.id as dataset_id, d.name as dataset_name
+     FROM dataset_version dv
+     JOIN dataset d ON dv.dataset_id = d.id
+     WHERE dv.id = ?`,
+    [versionId]
+  );
+
+  // 如果没有找到数据集版本
+  if (!Array.isArray(versionRows) || versionRows.length === 0) {
+    return null;
+  }
+
+  const versionRow = versionRows[0] as any;
+
+  // 获取与该版本关联的所有标准问题版本
+  const [questionRows] = await conn.execute(
+    `SELECT sqv.id, sqv.std_question_id, sqv.version, sqv.created_at, sqv.content, sqv.category
+     FROM dataset_question dq
+     JOIN std_question_version sqv ON dq.std_question_version_id = sqv.id
+     WHERE dq.version_id = ?`,
+    [versionId]
+  );
+
+  const stdQuestionVersions: StdQuestionVersion[] = [];
+
+  // 对于每个标准问题版本，获取其答案和评分点
+  if (Array.isArray(questionRows)) {
+    for (const row of questionRows as any[]) {
+      // 获取标准答案
+      const [answerRows] = await conn.execute(
+        `SELECT id, content
+         FROM std_answer
+         WHERE std_question_version_id = ?`,
+        [row.id]
+      );
+
+      let stdAnswer = undefined;
+
+      if (Array.isArray(answerRows) && answerRows.length > 0) {
+        const answerRow = answerRows[0] as any;
+
+        // 获取评分点
+        const [scoringPointRows] = await conn.execute(
+          `SELECT content, score
+           FROM scoring_point
+           WHERE std_answer_id = ?`,
+          [answerRow.id]
+        );
+
+        const scoringPoints = Array.isArray(scoringPointRows)
+          ? (scoringPointRows as any[]).map(sp => ({
+              content: sp.content,
+              score: sp.score
+            }))
+          : [];
+
+        stdAnswer = {
+          id: answerRow.id,
+          content: answerRow.content,
+          scoringPoints
+        };
+      }
+
+      // 获取标签
+      const [tagRows] = await conn.execute(
+        `SELECT t.tag
+         FROM question_tag qt
+         JOIN tag t ON qt.tag_id = t.id
+         WHERE qt.std_question_version_id = ?`,
+        [row.id]
+      );
+
+      const tags = Array.isArray(tagRows)
+        ? (tagRows as any[]).map(t => t.tag)
+        : undefined;
+
+      // 构建标准问题版本对象
+      stdQuestionVersions.push({
+        id: row.id,
+        version: row.version,
+        createdAt: row.created_at,
+        content: row.content,
+        answer: stdAnswer,
+        category: row.category || undefined,
+        tags,
+        stdQuestionId: row.std_question_id
+      });
+    }
+  }
+
+  // 构建并返回完整的数据集版本对象
+  return {
+    id: versionRow.id,
+    version: versionRow.version,
+    createdAt: versionRow.created_at,
+    stdQuestionVersions
+  };
+}

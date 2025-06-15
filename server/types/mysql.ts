@@ -78,6 +78,7 @@ export interface Assessment {
     id: number;
     model: string;
     totalScore: number;
+    datasetName: string;
     datasetVersionId: number;
     datasetVersion?: DatasetVersion;
     modelAnswers?: ModelAnswer[];

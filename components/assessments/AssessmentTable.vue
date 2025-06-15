@@ -42,10 +42,7 @@ const columns: TableColumn<Assessment>[] = [
   {
     accessorKey: 'datasetName',
     header: 'Dataset Name',
-    cell: ({ row }: { row: any }) => {
-      const assessment = row.original;
-      return assessment.datasetVersion?.datasetId || 'N/A';
-    },
+    cell: ({ row }: { row: any }) => row.getValue('datasetName'),
   },
   {
     accessorKey: 'datasetVersion',
@@ -59,6 +56,35 @@ const columns: TableColumn<Assessment>[] = [
     accessorKey: 'model',
     header: 'Model Name',
     cell: ({ row }: { row: any }) => row.getValue('model'),
+  },
+  {
+    accessorKey: 'score',
+    header: 'Score',
+    cell: ({ row }: { row: any }) => {
+      const assessment = row.original;
+      const totalScore = assessment.totalScore || 0;
+
+      console.log('Assessment data:', assessment); // 添加调试日志，检查数据结构
+
+      // 计算最大分数
+      let maxScore = 0;
+      if (assessment.modelAnswers && assessment.modelAnswers.length > 0) {
+        console.log('Model answers:', assessment.modelAnswers); // 添加调试日志
+        assessment.modelAnswers.forEach(answer => {
+          if (answer.scoreProcesses && answer.scoreProcesses.length > 0) {
+            answer.scoreProcesses.forEach(process => {
+              maxScore += Number(process.scoringPointMaxScore) || 0;
+            });
+          }
+        });
+      }
+
+      // 格式化为两位小数
+      const formattedTotal = Number(totalScore).toFixed(2);
+      const formattedMax = Number(maxScore).toFixed(2);
+
+      return `${formattedTotal}/${formattedMax}`;
+    },
   },
   {
     id: 'actions',

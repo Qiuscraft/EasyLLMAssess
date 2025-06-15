@@ -1,5 +1,6 @@
 import { withConnection } from './connection';
 import { ResultSetHeader } from 'mysql2';
+import { getDatasetVersionByVersionId } from './dataset';
 
 export interface ScoreProcess {
   type: string;
@@ -88,19 +89,17 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
   return withConnection(async (conn) => {
     const offset = (page - 1) * pageSize;
 
-    // 获取评测列表
+    // 获��评测列表
     const [assessments] = await conn.execute(`
       SELECT 
         a.id, 
         a.model, 
         a.total_score as totalScore, 
         a.dataset_version_id as datasetVersionId,
-        dv.id as datasetVersion_id,
-        dv.name as datasetVersion_version,
-        dv.created_at as datasetVersion_createdAt,
-        dv.dataset_id as datasetVersion_datasetId
+        d.name as datasetName
       FROM assessment a
       JOIN dataset_version dv ON a.dataset_version_id = dv.id
+      JOIN dataset d ON dv.dataset_id = d.id
       ORDER BY a.id ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
       LIMIT ${pageSize} OFFSET ${offset}
     `);
@@ -112,6 +111,18 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
 
     // 获取所有评测ID
     const assessmentIds = (assessments as any[]).map(a => a.id);
+
+    // 使用 getDatasetVersionByVersionId 获取完整的数据集版本信息
+    const datasetVersionsPromises = (assessments as any[]).map(a =>
+      getDatasetVersionByVersionId(conn, a.datasetVersionId)
+    );
+    const datasetVersions = await Promise.all(datasetVersionsPromises);
+
+    // 构建数据集版本ID到数据集版本的映射
+    const datasetVersionMap = new Map();
+    (assessments as any[]).forEach((a, index) => {
+      datasetVersionMap.set(a.datasetVersionId, datasetVersions[index]);
+    });
 
     // 获取所有模型回答
     const [modelAnswers] = await conn.execute(`
@@ -132,27 +143,28 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
       WHERE ma.assessment_id IN (?)
     `, [assessmentIds]);
 
+    // 调试日志，帮助我们理解模型回答查询结果
+    console.log(`Found ${modelAnswers ? (modelAnswers as any[]).length : 0} model answers for assessment IDs: ${assessmentIds.join(', ')}`);
+
     // 如果没有模型回答，将评测记录转换为需要的格式并返回
     if (!Array.isArray(modelAnswers) || modelAnswers.length === 0) {
-      return (assessments as any[]).map(a => ({
-        id: a.id,
-        model: a.model,
-        totalScore: a.totalScore,
-        datasetVersion: {
-          id: a.datasetVersion_id,
-          version: a.datasetVersion_version,
-          createdAt: a.datasetVersion_createdAt,
-          datasetId: a.datasetVersion_datasetId,
-          stdQuestionVersions: []
-        },
-        modelAnswers: []
-      }));
+      return (assessments as any[]).map(a => {
+        return {
+          id: a.id,
+          model: a.model,
+          totalScore: a.totalScore,
+          datasetName: a.datasetName,
+          datasetVersionId: a.datasetVersionId,
+          datasetVersion: datasetVersionMap.get(a.datasetVersionId),
+          modelAnswers: [] // 没有模型回答
+        };
+      });
     }
 
     // 获取所有模型回答ID
     const modelAnswerIds = (modelAnswers as any[]).map(ma => ma.id);
 
-    // 获取所有评分过程
+    // 3. 获取所有评分过程
     const [scoreProcesses] = await conn.execute(`
       SELECT 
         sp.id, 
@@ -165,6 +177,9 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
       FROM score_process sp
       WHERE sp.model_answer_id IN (?)
     `, [modelAnswerIds]);
+
+    // 调试日志
+    console.log(`Found ${scoreProcesses ? (scoreProcesses as any[]).length : 0} score processes for model answer IDs: ${modelAnswerIds.join(', ')}`);
 
     // 获取所有问题版本的标准答案和评分点
     const questionVersionIds = (modelAnswers as any[]).map(ma => ma.stdQuestionVersionId);
@@ -240,7 +255,7 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
       });
     }
 
-    // 将评分过程与模型���答关联
+    // 将评分过程与模型回答关联
     const scoreProcessesMap = new Map();
     if (Array.isArray(scoreProcesses)) {
       (scoreProcesses as any[]).forEach(sp => {
@@ -286,17 +301,19 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
     });
 
     // 构建最终返回的评测列表
-    return (assessments as any[]).map(a => ({
-      id: a.id,
-      model: a.model,
-      totalScore: a.totalScore,
-      datasetVersion: {
-        id: a.datasetVersion_id,
-        version: a.datasetVersion_version,
-        createdAt: a.datasetVersion_createdAt,
-        datasetId: a.datasetVersion_datasetId
-      },
-      modelAnswers: modelAnswersMap.get(a.id) || []
-    }));
+    return (assessments as any[]).map(a => {
+      // 获取关联的模型回答
+      const answers = modelAnswersMap.get(a.id) || [];
+
+      return {
+        id: a.id,
+        model: a.model,
+        totalScore: a.totalScore,
+        datasetName: a.datasetName,
+        datasetVersionId: a.datasetVersionId,
+        datasetVersion: datasetVersionMap.get(a.datasetVersionId),
+        modelAnswers: answers // 确保包含模型回答
+      };
+    });
   });
 }

@@ -106,7 +106,6 @@ const columns: TableColumn<StdQuestion>[] = [
     accessorKey: 'version',
     header: 'Version',
     cell: ({ row }) => {
-      const versionId = row.original.version_id;
       const versionName = row.original.version_name;
       return h('div', {}, `${versionName || 'N/A'}`);
     },

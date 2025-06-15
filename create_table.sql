@@ -173,6 +173,6 @@ CREATE TABLE score_process(
     type VARCHAR(63) NOT NULL,
     description TEXT NOT NULL,
     score DECIMAL NOT NULL,
-    model_answer_id INT NOT NULL REFERENCES model_answer(id),
-    scoring_point_id INT NOT NULL REFERENCES scoring_point(id)
+    scoring_point_content TEXT NOT NULL,
+    model_answer_id INT NOT NULL REFERENCES model_answer(id)
 );

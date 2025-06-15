@@ -153,6 +153,9 @@ const isDeleteModalOpen = ref(false)
 const modelIndexToDelete = ref(-1)
 const showApiKeyInput = ref(false)
 
+// 用于存储每行API Key的可见性状态
+const apiKeyVisibility = reactive({})
+
 // Default state for new model
 const defaultNewModel = {
   model: '',
@@ -168,6 +171,11 @@ const newModel = reactive({ ...defaultNewModel })
 const isFormValid = computed(() => {
   return newModel.model && newModel.apiBaseurl && newModel.apiKey
 })
+
+// Function to toggle API Key visibility
+function toggleApiKeyVisibility(index) {
+  apiKeyVisibility[index] = !apiKeyVisibility[index]
+}
 
 // Function to close modal and reset form
 function closeModal() {
@@ -247,28 +255,45 @@ const columns: TableColumn<ModelConfig>[] = [
     header: 'API Key',
     cell: ({ row }) => {
       const apiKey = row.getValue('apiKey');
-      // 使用一个唯一键来存储每行的状态
-      const rowId = `apiKey-visibility-${row.index}`;
-
-      // 如果状态不存在，则初始化为false
-      if (typeof window !== 'undefined' && !window[rowId]) {
-        window[rowId] = false;
-      }
+      const index = row.index;
 
       return h('div', { class: 'flex items-center gap-2' }, [
-        h('div', {}, window[rowId] && apiKey ? apiKey : (apiKey ? '••••••••' + apiKey.slice(-4) : 'Not Set')),
+        h('div', {}, apiKeyVisibility[index] && apiKey ? apiKey : (apiKey ? '••••••••' + apiKey.slice(-4) : 'Not Set')),
         apiKey ? h('button', {
           class: 'text-gray-500 hover:text-gray-700 focus:outline-none',
-          onClick: () => {
-            window[rowId] = !window[rowId];
-            // 强制组件重新渲染
-            modelStore.$forceUpdate();
-          }
+          onClick: () => toggleApiKeyVisibility(index)
         }, [
-          h('div', {
-            class: window[rowId] ? 'i-lucide-eye-off' : 'i-lucide-eye',
-            style: 'width: 20px; height: 20px;'
-          })
+          h('span', {}, apiKeyVisibility[index] ?
+            // 使用SVG而不是图标类
+            h('svg', {
+              xmlns: 'http://www.w3.org/2000/svg',
+              width: '20',
+              height: '20',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              stroke: 'currentColor',
+              'stroke-width': '2',
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round'
+            }, [
+              h('path', { d: 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24' }),
+              h('line', { x1: '1', y1: '1', x2: '23', y2: '23' })
+            ]) :
+            h('svg', {
+              xmlns: 'http://www.w3.org/2000/svg',
+              width: '20',
+              height: '20',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              stroke: 'currentColor',
+              'stroke-width': '2',
+              'stroke-linecap': 'round',
+              'stroke-linejoin': 'round'
+            }, [
+              h('path', { d: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' }),
+              h('circle', { cx: '12', cy: '12', r: '3' })
+            ])
+          )
         ]) : null
       ]);
     }

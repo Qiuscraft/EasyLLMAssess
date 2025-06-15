@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import {ResultSetHeader} from "mysql2";
-import {CandidateAnswer, StdQuestionVersion, StdQuestionWithoutAnswer} from "~/server/types/mysql";
+import {CandidateAnswer, StdQuestionVersion} from "~/server/types/mysql";
 
 export async function postCandidateAnswer(std_question_version_id: number, answer: string, username: string): Promise<number> {
     return await withConnection(async (conn) => {

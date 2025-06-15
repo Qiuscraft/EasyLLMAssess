@@ -19,8 +19,6 @@ export default defineEventHandler(async (event) => {
 
         // 验证 scoringPoints 格式是否正确
         if (!Array.isArray(scoringPoints) || scoringPoints.some(point =>
-            typeof point.content !== 'string' ||
-            typeof point.score !== 'number' ||
             point.content.trim() === '')) {
             throw createError({
                 statusCode: 400,

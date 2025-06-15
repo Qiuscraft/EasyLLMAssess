@@ -13,8 +13,8 @@ const props = defineProps({
   },
 });
 
-// 添加 emit 以便可以更新 open 状态
-const emit = defineEmits(['update:open']);
+// 添加 emit 以便可以更新 open 状态和通知提交成功
+const emit = defineEmits(['update:open', 'submit-success']);
 
 // 定义关闭 Modal 的函数
 function closeModal() {
@@ -75,6 +75,8 @@ async function handleSubmit() {
         title: "Standard Answer Submitted Successfully.",
         color: 'success'
       })
+      // 提交成功后触发事件
+      emit('submit-success');
       closeModal();
     } catch (error) {
       toast.add({

@@ -197,7 +197,11 @@ onMounted(async () => {
         v-model:page_size="page_size"
         :total="total"
     />
-    <CandidateAnswerAdoptingModal v-model:open="modalOpen" :answer="modalAnswer" />
+    <CandidateAnswerAdoptingModal
+        v-model:open="modalOpen"
+        :answer="modalAnswer"
+        @submit-success="fetchData"
+    />
   </div>
 </template>
 

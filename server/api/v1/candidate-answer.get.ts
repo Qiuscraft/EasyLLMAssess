@@ -7,7 +7,6 @@ export default defineEventHandler(async (event) => {
     // 解析并转换查询参数
     const id = query.id ? parseInt(query.id as string) : undefined;
     const std_question = query.std_question as string || '';
-    const std_question_id = query.std_question_id ? parseInt(query.std_question_id as string) : undefined;
     const author = query.author as string || '';
     const content = query.content as string || '';
 
@@ -30,7 +29,6 @@ export default defineEventHandler(async (event) => {
         const result = await getCandidateAnswer(
             id,
             std_question,
-            std_question_id,
             author,
             content,
             sort_field,

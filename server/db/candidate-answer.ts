@@ -16,7 +16,6 @@ export async function postCandidateAnswer(std_question_id: number, answer: strin
 export async function getCandidateAnswer(
     id: number | undefined = undefined,
     std_question: string = '',
-    std_question_id: number | undefined = undefined,
     author: string = '',
     content: string = '',
     order_field: string = 'id',
@@ -38,11 +37,6 @@ export async function getCandidateAnswer(
             params.push(id);
         }
 
-        if (std_question_id !== undefined) {
-            conditions.push('ca.std_question_id = ?');
-            params.push(std_question_id);
-        }
-
         if (author) {
             conditions.push('ca.author LIKE ?');
             params.push(`%${author}%`);
@@ -54,12 +48,12 @@ export async function getCandidateAnswer(
         }
 
         if (std_question) {
-            conditions.push('sq.content LIKE ?');
+            conditions.push('sqv.content LIKE ?');
             params.push(`%${std_question}%`);
         }
 
         if (onlyShowNoStandardAnswer) {
-            conditions.push('(sq.answer IS NULL OR sq.answer = "")');
+            conditions.push('NOT EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id)');
         }
 
         // 构建完整的 WHERE 子句
@@ -69,24 +63,26 @@ export async function getCandidateAnswer(
         const [totalRows] = await conn.execute(
             `SELECT COUNT(*) as total
              FROM candidate_answer ca
-             LEFT JOIN std_question sq ON ca.std_question_id = sq.id
+             LEFT JOIN std_question_version sqv ON ca.std_question_version_id = sqv.id
+             LEFT JOIN std_question sq ON sqv.std_question_id = sq.id
              ${whereClause}`,
             params
         );
         const total = (totalRows as any[])[0].total;
 
         // 安全处理排序字段
-        const safeOrderField = ['id', 'author', 'content', 'std_question_id'].includes(order_field)
+        const safeOrderField = ['id', 'author', 'content', 'std_question_version_id'].includes(order_field)
             ? `ca.${order_field}`
             : 'ca.id';
         const safeOrderBy = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
         // 2. 获取分页数据
         const [rows] = await conn.execute(
-            `SELECT ca.id, ca.author, ca.content, ca.std_question_id,
-                    sq.id as sq_id, sq.content as sq_content
+            `SELECT ca.id, ca.author, ca.content, ca.std_question_version_id,
+                    sq.id as sq_id, sqv.content as sq_content
              FROM candidate_answer ca
-             LEFT JOIN std_question sq ON ca.std_question_id = sq.id
+             LEFT JOIN std_question_version sqv ON ca.std_question_version_id = sqv.id
+             LEFT JOIN std_question sq ON sqv.std_question_id = sq.id
              ${whereClause}
              ORDER BY ${safeOrderField} ${safeOrderBy}
              LIMIT ${page_size} OFFSET ${(page - 1) * page_size}`,

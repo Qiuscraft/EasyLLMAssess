@@ -2,6 +2,18 @@ import {getStandardQuestions} from "~/server/db/std-question";
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
+
+    // 处理tags参数，可以是字符串或字符串数组
+    let tags: string[] = [];
+    if (query.tags) {
+        if (Array.isArray(query.tags)) {
+            tags = query.tags as string[];
+        } else {
+            // 如果是单个字符串，则可能是逗号分隔的多个标签
+            tags = (query.tags as string).split(',').map(tag => tag.trim()).filter(tag => tag);
+        }
+    }
+
     return await getStandardQuestions(
         query.id !== undefined ? Number(query.id) : undefined,
         query.content as string || '',
@@ -11,6 +23,7 @@ export default defineEventHandler(async (event) => {
         query.page_size !== undefined ? Number(query.page_size) : 5,
         query.only_show_answered === 'true',
         query.only_show_no_answered === 'true',
-        query.category as string || ''
+        query.category as string || '',
+        tags
     );
 })

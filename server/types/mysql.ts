@@ -67,3 +67,8 @@ export interface Category {
     name: string;
     count: number;  // 每个分类下的问题数量
 }
+
+export interface TagCount {
+    tag: string;     // 标签名称
+    count: number;   // 该标签下的问题数量
+}

@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
-import type { TableColumn } from '@nuxt/ui-pro'
 import type {StdQuestion, StdQuestionVersion, Category} from "~/server/types/mysql";
-import { UButton } from "#components";
+import { UButton, USelect, UCheckbox, UTable } from "#components"; // 仅导入可用的组件
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
 import {responseToStdQuestions, sortStdQuestionVersionsByCreationTime} from "~/utils/std-question";
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
 
-const UCheckbox = resolveComponent('UCheckbox')
-const USelect = resolveComponent('USelect')
+// 改��resolveComponent方式获取UInputTags组件
+const UInputTags = resolveComponent('UInputTags')
+const TableColumn = resolveComponent('TableColumn')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);
@@ -26,6 +26,9 @@ const page_size = ref(5)
 const page = ref(1)
 const onlyShowQuestionWithAnswer = ref(true);
 const selectedCategory = ref(''); // 添加分类筛选变量
+const selectedTags = ref<string[]>([]); // 添加标签筛选变量
+const tagSearchInput = ref(''); // 用于记录当前输入的标签搜索文本
+const availableTags = ref<{ label: string; value: string; }[]>([]); // 可选标签列表
 
 const params = computed(() => {
   return {
@@ -37,6 +40,8 @@ const params = computed(() => {
     only_show_answered: onlyShowQuestionWithAnswer.value,
     // Handle "All Categories" option (value 'all') by sending empty string
     category: selectedCategory.value === 'all' ? '' : selectedCategory.value,
+    // 添加标签筛选参数
+    tags: selectedTags.value.length > 0 ? selectedTags.value.join(',') : undefined,
   };
 });
 
@@ -72,6 +77,8 @@ async function fetchData() {
 
 onMounted(async () => {
   await fetchCategoryData();
+  // 初始化时获取热门标签
+  await searchTagsByInput('');
   await fetchData();
   // 确保表格初始状态为降序排序
   if (table?.value?.tableApi) {
@@ -99,7 +106,7 @@ const getVersionOptions = (questionId: number) => {
   }));
 };
 
-// 更改当前显示的版本
+// 更����当前显示的版本
 const changeVersion = (questionId: number, versionIndex: number) => {
   currentVersionIndices.value[questionId] = versionIndex;
 };
@@ -184,6 +191,44 @@ const columns: TableColumn<StdQuestion>[] = [
     }
   },
   {
+    id: 'tags',
+    header: () => {
+      return h('div', { class: 'w-48' }, [
+        h(UInputTags, {
+          modelValue: selectedTags.value,
+          items: availableTags.value,
+          placeholder: "Filter by tags...",
+          disableFiltering: true,
+          'onUpdate:modelValue': (newValue: string[]) => {
+            selectedTags.value = newValue;
+          },
+          'onUpdate:input': (newValue: string) => {
+            tagSearchInput.value = newValue;
+          },
+          size: "sm",
+          variant: "outline",
+          color: "primary",
+          class: "w-full"
+        })
+      ]);
+    },
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      if (!currentVersion?.tags || currentVersion.tags.length === 0) {
+        return h('div', { class: 'text-sm text-muted' }, 'No tags');
+      }
+
+      return h('div', { class: 'flex flex-wrap gap-1' },
+        currentVersion.tags.map(tag =>
+          h('span', {
+            class: 'px-1.5 py-0.5 rounded-sm text-xs font-medium bg-elevated text-default ring ring-inset ring-accented'
+          }, tag)
+        )
+      );
+    }
+  },
+  {
     id: 'category',
     header: () => {
       return h(USelect, {
@@ -244,6 +289,52 @@ watch([content, answer, onlyShowQuestionWithAnswer, selectedCategory], async () 
   }
 });
 
+// 获取分类列表数据
+const categoryOptions = ref<{ label: string; value: string; description?: string }[]>([
+  { label: 'All', value: 'all', description: 'Show all questions' }
+]);
+
+// 根据输入的文本搜索标签
+async function searchTagsByInput(input: string) {
+  try {
+    const tags = await $fetch('/api/v1/tag', {
+      method: 'GET',
+      params: {
+        tag: input,
+        size: 10 // 最多返回10个标签
+      }
+    });
+
+    // 将API返回的标签格式转换为UInputTags需要的格式
+    availableTags.value = (tags as { tag: string; count: number }[]).map(item => ({
+      label: `${item.tag} (${item.count})`,
+      value: item.tag
+    }));
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    availableTags.value = [];
+  }
+}
+
+// 在用户输入变化时搜索标签
+watch(tagSearchInput, async (newValue) => {
+  if (newValue) {
+    await searchTagsByInput(newValue);
+  } else {
+    // 如果输入为空，获取热门标签
+    await searchTagsByInput('');
+  }
+});
+
+// 监��标签选择变化，刷新数据
+watch(selectedTags, async () => {
+  if (page.value === 1) {
+    await fetchData();
+  } else {
+    page.value = 1; // 切换到第一页
+  }
+}, { deep: true });
+
 const table = useTemplateRef('table')
 
 const viewingRow = ref<StdQuestion | null>(null)
@@ -263,7 +354,7 @@ computed(() => {
       .map(Number);
 });
 const selected_version_id_list = computed(() => {
-  // 获取选中行的问题ID
+  // ���取选中行的问题ID
   const selectedQuestionIds = Object.keys(rowSelection.value)
     .filter(id => rowSelection.value[Number(id)])
     .map(Number);
@@ -314,11 +405,6 @@ watch (isModalOpen, (newValue) => {
   }
 })
 
-// 获取分类列表数据
-const categoryOptions = ref<{ label: string; value: string; description?: string }[]>([
-  { label: 'All', value: 'all', description: 'Show all questions' }
-]);
-
 // 获取分类数据
 async function fetchCategoryData() {
   try {
@@ -328,7 +414,7 @@ async function fetchCategoryData() {
 
     // 确保我们已经有了问题总数
     if (totalNoFilter.value === 0) {
-      // 如果totalNoFilter还没有值，先获取一次问题总数
+      // 如果totalNoFilter还没有值，先获取一次问题总��
       const response = await $fetch('/api/v1/std-question', {
         method: 'GET',
         params: {
@@ -365,9 +451,37 @@ async function fetchCategoryData() {
 <template>
   <div class="flex items-center gap-4 mb-4 flex-wrap">
     <UCheckbox v-model="onlyShowQuestionWithAnswer" color="primary" label="Only show the questions that have standard answer" />
+    <!-- 测试UInputTags是否能正常显示 -->
+    <div class="flex flex-col gap-1 w-64">
+      <div class="text-sm font-medium">测试UInputTags组件</div>
+      <UInputTags
+        v-model="selectedTags"
+        :items="availableTags"
+        placeholder="搜索标签..."
+        :disable-filtering="true"
+        @update:input="tagSearchInput = $event"
+        size="sm"
+        variant="outline"
+        color="primary"
+      />
+    </div>
   </div>
   <div class="flex-1 w-full">
     <CreateDatasetButton :id_list="selected_version_id_list" @submit="handleSubmit" />
+
+    <!-- 显示当前选中的标签 -->
+    <div v-if="selectedTags.length > 0" class="mb-2 p-2 bg-elevated rounded">
+      <div class="text-sm font-medium mb-1">当前选中的标签:</div>
+      <div class="flex flex-wrap gap-1">
+        <span
+          v-for="tag in selectedTags"
+          :key="tag"
+          class="px-1.5 py-0.5 rounded-sm text-xs font-medium bg-elevated text-default ring ring-inset ring-accented"
+        >
+          {{ tag }}
+        </span>
+      </div>
+    </div>
 
     <UTable
         sticky

@@ -13,12 +13,13 @@ export async function getStandardQuestions(
     onlyShowAnswered: boolean = false,
     onlyShowNoAnswered: boolean = false,
     category: string = '',
+    tags: string[] = [],
 ): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
         return {
-            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, category),
+            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, category, tags),
             total_no_filter: await getTotalStandardQuestionsNoFilter(conn),
-            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, order_by, page, page_size, category),
+            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, order_by, page, page_size, category, tags),
         }
     });
 }
@@ -95,7 +96,8 @@ function buildStdQuestionFilter(
     answer: string,
     onlyShowAnswered: boolean,
     onlyShowNoAnswered: boolean = false,
-    category: string = ''
+    category: string = '',
+    tags: string[] = []
 ): { conditions: string[], params: any[], whereClause: string } {
     const idParam = id === undefined ? null : id;
     const filterConditions: string[] = [];
@@ -104,7 +106,8 @@ function buildStdQuestionFilter(
     const baseTableAlias = 'sq_filter'; // 用于 std_question 的别名
     const versionTableAlias = 'sqv_filter'; // 用于 std_question_version 的别名
     const answerTableAlias = 'sa_filter'; // 用于 std_answer 的别名
-
+    const tagTableAlias = 't_filter'; // 用于 tag 的别名
+    const questionTagTableAlias = 'qt_filter'; // 用于 question_tag 的别名
 
     if (idParam !== null) {
         filterConditions.push(`${baseTableAlias}.id = ?`);
@@ -119,6 +122,21 @@ function buildStdQuestionFilter(
     if (category) {
         filterConditions.push(`${versionTableAlias}.category = ?`);
         filterParams.push(category);
+    }
+
+    // 添加按标签筛选的条件
+    if (tags && tags.length > 0) {
+        // 如果有多个标签，需要确保问题版本拥有所有指定的标签
+        const tagPlaceholders = tags.map(() => '?').join(', ');
+        filterConditions.push(`${versionTableAlias}.id IN (
+            SELECT qt.std_question_version_id 
+            FROM question_tag qt
+            JOIN tag t ON qt.tag_id = t.id
+            WHERE t.tag IN (${tagPlaceholders})
+            GROUP BY qt.std_question_version_id
+            HAVING COUNT(DISTINCT t.tag) = ?
+        )`);
+        filterParams.push(...tags, tags.length); // 添加标签值和标签数量
     }
 
     if (onlyShowAnswered) {
@@ -156,6 +174,7 @@ export async function getStandardQuestionsAfterFiltered(
     page: number = 1,
     page_size: number = 5,
     category: string = '',
+    tags: string[] = [],
 ): Promise<StdQuestion[]> {
     const { whereClause: whereClauseForSubQuery, params: subQueryFilterParams } = buildStdQuestionFilter(
         id,
@@ -163,7 +182,8 @@ export async function getStandardQuestionsAfterFiltered(
         answer,
         onlyShowAnswered,
         onlyShowNoAnswered,
-        category
+        category,
+        tags
     );
 
     const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
@@ -338,6 +358,7 @@ export async function getTotalStandardQuestionsAfterFiltered(
     onlyShowAnswered: boolean = false,
     onlyShowNoAnswered: boolean = false,
     category: string = '',
+    tags: string[] = [],
 ): Promise<number> {
     const { whereClause, params } = buildStdQuestionFilter(
         id,
@@ -345,13 +366,14 @@ export async function getTotalStandardQuestionsAfterFiltered(
         answer,
         onlyShowAnswered,
         onlyShowNoAnswered,
-        category
+        category,
+        tags
     );
 
     // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
     // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的���名一致。
     // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数���或者���使用别名。
-    // 为了简单起见，这里直接替换��询中的别名以匹配 buildStdQuestionFilter 的输出。
+    // 为了简单起见，这里直接替换��询中的别名以匹配 buildStdQuestionFilter ���输出。
     // 一个更���壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
 
     // ��前 buildStdQuestionFilter 使用的别名是：

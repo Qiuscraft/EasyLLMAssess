@@ -28,6 +28,11 @@ const items = ref<NavigationMenuItem[]>([
     to: '/datasets',
   },
   {
+    label: 'Assessments',
+    icon: 'i-lucide-file-video',
+    to: '/assessments',
+  },
+  {
     label: 'User View',
     icon: 'i-lucide-user',
     to: '/user-view',

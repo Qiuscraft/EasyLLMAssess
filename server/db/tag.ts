@@ -14,7 +14,6 @@ export async function searchTags(searchTag: string = '', size: number = 10): Pro
         let query = `
             SELECT tag, question_count as count 
             FROM tag 
-            WHERE 1=1
         `;
 
         const params: any[] = [];

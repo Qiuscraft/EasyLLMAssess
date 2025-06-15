@@ -87,7 +87,8 @@ async function handleSubmit() {
     <UButton
       label="Import Assessment"
       icon="i-heroicons-arrow-up-tray"
-      color="primary"
+      color="neutral"
+      variant="subtle"
       @click="open = true"
     />
 
@@ -134,13 +135,13 @@ async function handleSubmit() {
       <template #footer>
         <UButton
           label="Cancel"
-          color="gray"
+          color="neutral"
           variant="outline"
           @click="open = false"
         />
         <UButton
           label="Submit"
-          color="primary"
+          color="neutral"
           :loading="loading"
           :disabled="!fileContent || loading"
           @click="handleSubmit"

@@ -87,11 +87,17 @@ CREATE TABLE tag(
     question_count INT NOT NULL DEFAULT 0 -- 添加计数字段，记录每个标签下的问题数量
 );
 
+CREATE TABLE question_tag(
+    std_question_version_id INT NOT NULL REFERENCES std_question_version(id),
+    tag_id INT NOT NULL REFERENCES tag(id),
+    PRIMARY KEY (std_question_version_id, tag_id)
+);
+
 -- 创建触发器，在插入question_tag时自动更新tag表中的计数
 DELIMITER //
 CREATE TRIGGER after_question_tag_insert
-AFTER INSERT ON question_tag
-FOR EACH ROW
+    AFTER INSERT ON question_tag
+    FOR EACH ROW
 BEGIN
     -- 增加标签引用计数
     UPDATE tag SET question_count = question_count + 1 WHERE id = NEW.tag_id;
@@ -99,8 +105,8 @@ END//
 
 -- 创建触发器，在删除question_tag时自动更新tag表中的计数
 CREATE TRIGGER after_question_tag_delete
-AFTER DELETE ON question_tag
-FOR EACH ROW
+    AFTER DELETE ON question_tag
+    FOR EACH ROW
 BEGIN
     -- 减少标签引用计数
     UPDATE tag SET question_count = question_count - 1 WHERE id = OLD.tag_id;
@@ -108,12 +114,6 @@ BEGIN
     -- DELETE FROM tag WHERE id = OLD.tag_id AND question_count <= 0;
 END//
 DELIMITER ;
-
-CREATE TABLE question_tag(
-    std_question_version_id INT NOT NULL REFERENCES std_question_version(id),
-    tag_id INT NOT NULL REFERENCES tag(id),
-    PRIMARY KEY (std_question_version_id, tag_id)
-);
 
 CREATE TABLE std_answer(
     id INT AUTO_INCREMENT PRIMARY KEY,

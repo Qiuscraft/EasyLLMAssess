@@ -30,8 +30,7 @@ export async function searchTags(searchTag: string = '', size: number = 10): Pro
 
         // 限制返回结果数量
         if (size > 0) {
-            query += ` LIMIT ?`;
-            params.push(size);
+            query += ` LIMIT ${size}`;
         }
 
         const [rows] = await conn.execute(query, params);

@@ -21,6 +21,8 @@ const page_size = ref(5)
 const page = ref(1)
 const onlyShowQuestionWithAnswer = ref(true);
 const selectedCategory = ref(''); // 添加分类筛选变量
+const selectedTags = ref<string[]>([]); // 添加标签筛选变量
+const tagOptions = ref<{ label: string; value: string }[]>([]);
 
 const params = computed(() => {
   return {
@@ -32,6 +34,7 @@ const params = computed(() => {
     only_show_answered: onlyShowQuestionWithAnswer.value,
     // Handle "All Categories" option (value 'all') by sending empty string
     category: selectedCategory.value === 'all' ? '' : selectedCategory.value,
+    tags: selectedTags.value,
   };
 });
 
@@ -67,6 +70,7 @@ async function fetchData() {
 
 onMounted(async () => {
   await fetchCategoryData();
+  await fetchTagsData(); // 添加获取标签数据
   await fetchData();
   // 确保表格初始状态为降序排序
   if (table?.value?.tableApi) {
@@ -180,7 +184,19 @@ const columns: TableColumn<StdQuestion>[] = [
   },
   {
     id: 'tags',
-    header: 'Tags',
+    header: () => {
+      return h(USelect, {
+        modelValue: selectedTags.value,
+        items: tagOptions.value,
+        placeholder: "Select Tags",
+        size: "sm",
+        class: "w-48",
+        multiple: true,
+        'onUpdate:modelValue': (newValue: string[]) => {
+          selectedTags.value = newValue;
+        }
+      });
+    },
     cell: ({ row }: { row: any }) => {
       const questionId = row.original.id;
       const currentVersion = getCurrentVersion(questionId);
@@ -253,13 +269,13 @@ watch([page, page_size], async () => {
   await fetchData();
 }, { deep: true });
 
-watch([content, answer, onlyShowQuestionWithAnswer, selectedCategory], async () => {
+watch([content, answer, onlyShowQuestionWithAnswer, selectedCategory, selectedTags], async () => {
   if (page.value === 1) {
     await fetchData();
   } else {
     page.value = 1; // Reset to first page when filters change
   }
-});
+}, { deep: true });
 
 // 获取分类列表数据
 const categoryOptions = ref<{ label: string; value: string; description?: string }[]>([
@@ -356,14 +372,14 @@ async function fetchCategoryData() {
       totalNoFilter.value = response.total_no_filter || 0;
     }
 
-    // 将获取的分类数据转换为下拉菜单选�����格式
+    // 将获取的分类数据转换为下拉菜单选项格式
     const options = categories.map(category => ({
       label: `${category.name} (${category.count})`,
       value: category.name,
       description: `${category.count} questions`
     }));
 
-    // 保留"全部分类"选项并添加获取的分类
+    // 保留"��部分类"选项并添加获取的分类
     // 使用totalNoFilter作为所有问题的总数量，包括未分类的问题
     categoryOptions.value = [
       { label: `All (${totalNoFilter.value})`, value: 'all', description: `${totalNoFilter.value} questions total` },
@@ -372,6 +388,30 @@ async function fetchCategoryData() {
   } catch (error) {
     useToast().add({
       title: "Failed to load categories",
+      description: error instanceof Error ? error.message : "Unknown error",
+      color: 'error'
+    });
+  }
+}
+
+// 获取标签数据
+async function fetchTagsData() {
+  try {
+    const tags = await $fetch('/api/v1/tag', {
+      method: 'GET',
+      params: {
+        size: 100 // 获取较多的标签以便筛选
+      }
+    });
+
+    // 将获取的标签数据转换为下拉菜单选项格式
+    tagOptions.value = tags.map((tag: any) => ({
+      label: `${tag.tag} (${tag.count})`,
+      value: tag.tag
+    }));
+  } catch (error) {
+    useToast().add({
+      title: "Failed to load tags",
       description: error instanceof Error ? error.message : "Unknown error",
       color: 'error'
     });

@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    return await getStandardQuestions(
+    const startTime = performance.now(); // 记录开始时间
+    const result = await getStandardQuestions(
         query.id !== undefined ? Number(query.id) : undefined,
         query.content as string || '',
         query.answer as string || '',
@@ -26,4 +27,11 @@ export default defineEventHandler(async (event) => {
         query.category as string || '',
         tags
     );
+    const endTime = performance.now(); // 记录结束时间
+    const delay = (endTime - startTime).toFixed(2); // 计算运行时间
+
+    return {
+        ...result,
+        delay: Number(delay) // 返回运行时间，单位：毫秒
+    };
 })

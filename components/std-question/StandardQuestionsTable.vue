@@ -23,6 +23,7 @@ const onlyShowQuestionWithAnswer = ref(true);
 const selectedCategory = ref(''); // 添加分类筛选变量
 const selectedTags = ref<string[]>([]); // 添加标签筛选变量
 const tagOptions = ref<{ label: string; value: string }[]>([]);
+const delay = ref(0);
 
 const params = computed(() => {
   return {
@@ -47,6 +48,7 @@ async function fetchData() {
     });
 
     data.value = responseToStdQuestions(response.std_questions);
+    delay.value = response.delay || 0;
 
     // 初始化每行当前显示的版本索引为0
     data.value.forEach(question => {
@@ -449,6 +451,8 @@ const getTagColorByFirstLetter = (tag: string): string => {
 
   <div class="flex-1 w-full">
     <CreateDatasetButton :id_list="selected_version_id_list" @submit="handleSubmit" />
+
+    <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">It causes {{delay}} ms to fetch data.</span>
 
     <UTable
         sticky

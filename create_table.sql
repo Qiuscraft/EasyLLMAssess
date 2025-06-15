@@ -122,6 +122,7 @@ CREATE TABLE std_answer(
 );
 
 CREATE TABLE scoring_point(
+    id INT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,
     score DECIMAL NOT NULL,
     std_answer_id INT NOT NULL REFERENCES std_answer(id)
@@ -150,4 +151,28 @@ CREATE TABLE dataset_question (
     version_id INT NOT NULL REFERENCES dataset_version(id),
     std_question_version_id INT NOT NULL REFERENCES std_question_version(id),
     PRIMARY KEY (version_id, std_question_version_id)
+);
+
+CREATE TABLE assessment(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    model VARCHAR(63) NOT NULL,
+    total_score DECIMAL NOT NULL,
+    dataset_version_id INT NOT NULL REFERENCES dataset_version(id)
+);
+
+CREATE TABLE model_answer (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content TEXT NOT NULL,
+    total_score DECIMAL NOT NULL,
+    std_question_version_id INT NOT NULL REFERENCES std_question_version(id),
+    assessment_id INT NOT NULL REFERENCES assessment(id)
+);
+
+CREATE TABLE score_process(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(63) NOT NULL,
+    description TEXT NOT NULL,
+    score DECIMAL NOT NULL,
+    model_answer_id INT NOT NULL REFERENCES model_answer(id),
+    scoring_point_id INT NOT NULL REFERENCES scoring_point(id)
 );

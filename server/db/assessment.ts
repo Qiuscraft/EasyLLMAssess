@@ -47,8 +47,6 @@ export async function createAssessment(assessment: Assessment): Promise<number> 
 
         // 插入score_process记录
         for (const scoreProcess of modelAnswer.score_processes) {
-          // 添加调试日志，输出每个评分过程的详细信息
-          console.log('处理评分过程:', JSON.stringify(scoreProcess, null, 2));
 
           // 检查是否有undefined值并提供默认值
           const type = scoreProcess.type || '';
@@ -59,15 +57,6 @@ export async function createAssessment(assessment: Assessment): Promise<number> 
           const scoringPointMaxScore = scoreProcess.scoring_point_max_score !== undefined
             ? scoreProcess.scoring_point_max_score
             : 0;
-
-          console.log('处理后的参数:', {
-            type,
-            description,
-            score,
-            scoringPointContent,
-            scoringPointMaxScore,
-            modelAnswerId
-          });
 
           await conn.execute(
             'INSERT INTO score_process (type, description, score, scoring_point_content, scoring_point_max_score, model_answer_id) VALUES (?, ?, ?, ?, ?, ?)',

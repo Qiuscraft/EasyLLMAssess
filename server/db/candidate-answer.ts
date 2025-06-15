@@ -1,6 +1,6 @@
 import {withConnection} from "~/server/db/connection";
 import {ResultSetHeader} from "mysql2";
-import {CandidateAnswer, StdQuestionWithoutAnswer} from "~/server/types/mysql";
+import {CandidateAnswer, StdQuestionVersion, StdQuestionWithoutAnswer} from "~/server/types/mysql";
 
 export async function postCandidateAnswer(std_question_version_id: number, answer: string, username: string): Promise<number> {
     return await withConnection(async (conn) => {
@@ -53,7 +53,7 @@ export async function getCandidateAnswer(
         }
 
         if (onlyShowNoStandardAnswer) {
-            // 修正条件：显示没有标准答案或者标准答案为空的问题版本
+            // 修正条件：显示���有标准答案或者标准答案为空的问题版本
             conditions.push('(NOT EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id) OR EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id AND (sa.content IS NULL OR sa.content = "")))');
         }
 
@@ -77,11 +77,13 @@ export async function getCandidateAnswer(
             : 'ca.id';
         const safeOrderBy = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
-        // 2. 获取分页数据
+        // 2. 获取分页数据和相关联的问题版本详细信息
         const [rows] = await conn.execute(
-            `SELECT ca.id, ca.author, ca.content, ca.std_question_version_id,
-                    sq.id as sq_id, sqv.content as sq_content, 
-                    sqv.id as version_id, sqv.version as version_name
+            `SELECT 
+                ca.id, ca.author, ca.content, ca.std_question_version_id,
+                sqv.id as version_id, sqv.version as version_name, 
+                sqv.content as question_content, sqv.created_at as version_created_at,
+                sqv.category as version_category, sq.id as std_question_id
              FROM candidate_answer ca
              LEFT JOIN std_question_version sqv ON ca.std_question_version_id = sqv.id
              LEFT JOIN std_question sq ON sqv.std_question_id = sq.id
@@ -94,16 +96,23 @@ export async function getCandidateAnswer(
         // 3. 处理结果
         const candidate_answers: CandidateAnswer[] = [];
         for (const row of rows as any[]) {
+            // 构造问题版本对象
+            const questionVersion: StdQuestionVersion = {
+                id: row.version_id,
+                version: row.version_name,
+                createdAt: new Date(row.version_created_at),
+                content: row.question_content,
+                category: row.version_category || undefined,
+                tags: [], // 标签需要额外查询，但这里不是必需的
+                answer: undefined, // 标准答案需要额外查询，但这里不是必需的
+                stdQuestionId: row.std_question_id
+            };
+
             candidate_answers.push({
                 id: row.id,
                 author: row.author,
                 content: row.content,
-                std_question: {
-                    id: row.sq_id,
-                    content: row.sq_content,
-                } as StdQuestionWithoutAnswer,
-                version_id: row.version_id,
-                version_name: row.version_name
+                questionVersion: questionVersion
             });
         }
 

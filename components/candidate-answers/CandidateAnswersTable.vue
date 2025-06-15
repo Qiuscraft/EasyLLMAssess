@@ -100,13 +100,13 @@ const columns: TableColumn<StdQuestion>[] = [
         ref: (el: any) => { sortButtonRefs.value['std_question_id'] = el; },
       })
     },
-    cell: ({ row }) => row.original.std_question.id,
+    cell: ({ row }) => row.original.questionVersion.stdQuestionId,
   },
   {
     accessorKey: 'version',
     header: 'Version',
     cell: ({ row }) => {
-      const versionName = row.original.version_name;
+      const versionName = row.original.questionVersion.version;
       return h('div', {}, `${versionName || 'N/A'}`);
     },
   },
@@ -122,7 +122,7 @@ const columns: TableColumn<StdQuestion>[] = [
         label: "Question Content"
       })
     },
-    cell: ({ row }) => h('div', { innerHTML: row.original.std_question.content }),
+    cell: ({ row }) => h('div', { innerHTML: row.original.questionVersion.content }),
   },
   {
     accessorKey: 'content',

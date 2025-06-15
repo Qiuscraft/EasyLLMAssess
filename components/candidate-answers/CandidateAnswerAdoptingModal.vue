@@ -66,7 +66,7 @@ async function handleSubmit() {
       await $fetch('/api/v1/standard-answer', {
         method: 'POST',
         body: {
-          std_question_id: props.answer.std_question.id,
+          std_question_version_id: props.answer.questionVersion.id,
           answer: submitAnswer.value,
           scoring_points: insertingPoints.value,
         },
@@ -102,7 +102,7 @@ async function handleSubmit() {
         @update:open="(value) => emit('update:open', value)"
     >
       <template #body>
-        <UPageCard title="Question" :description="answer.std_question.content" />
+        <UPageCard title="Question" :description="answer.questionVersion.content" />
         <UPageCard title="Answer">
           <UTextarea v-model="submitAnswer" :rows="1" autoresize class="w-full" />
         </UPageCard>

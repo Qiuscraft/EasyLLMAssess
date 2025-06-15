@@ -57,9 +57,7 @@ export interface DatasetVersion {
 
 export interface CandidateAnswer {
     id: number;
-    std_question: StdQuestionWithoutAnswer;
-    content: string;          // 答案内容
-    author: string;       // 用户名
-    version_id?: number;  // 问题版本ID
-    version_name?: string; // 问题版本名称
+    content: string; // 答案内容
+    author: string; // 用户名
+    questionVersion: StdQuestionVersion
 }

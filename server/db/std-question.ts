@@ -23,7 +23,7 @@ export async function getStandardQuestions(
 }
 
 export async function setStandardAnswer(
-    id: number,
+    questionVersionId: number,
     answer: string,
     scoringPoints: InsertingScoringPoint[],
 ): Promise<void> {
@@ -32,33 +32,42 @@ export async function setStandardAnswer(
             // 开始事务
             await conn.beginTransaction();
 
-            // 1. 更新标准问题的答案
-            await conn.execute(
-                'UPDATE std_question SET answer = ? WHERE id = ?',
-                [answer, id]
+            // 检查是否已存在标准答案
+            const [existingAnswers] = await conn.execute(
+                'SELECT id FROM std_answer WHERE std_question_version_id = ?',
+                [questionVersionId]
             );
 
-            // 2. 删除该问题与所有评分点的关联
-            await conn.execute(
-                'DELETE FROM std_question_point WHERE std_question_id = ?',
-                [id]
-            );
+            let answerId: number;
 
-            // 3. 处理新的评分点
-            for (const point of scoringPoints) {
-                // 插入新的评分点
-                const [result] = await conn.execute(
-                    'INSERT INTO point (content, score) VALUES (?, ?)',
-                    [point.content, point.score]
+            if ((existingAnswers as any[]).length > 0) {
+                // 如果已存在标准答案，更新它
+                answerId = (existingAnswers as any[])[0].id;
+                await conn.execute(
+                    'UPDATE std_answer SET content = ? WHERE id = ?',
+                    [answer, answerId]
                 );
 
-                // 获取新插�����的评分点ID
-                const pointId = (result as mysql.ResultSetHeader).insertId;
-
-                // 建立问题与评分点的关联
+                // 删除该答案的所有评分点
                 await conn.execute(
-                    'INSERT INTO std_question_point (std_question_id, point_id) VALUES (?, ?)',
-                    [id, pointId]
+                    'DELETE FROM scoring_point WHERE std_answer_id = ?',
+                    [answerId]
+                );
+            } else {
+                // 如果不存在标准答案，创建一个新的
+                const [result] = await conn.execute(
+                    'INSERT INTO std_answer (std_question_version_id, content) VALUES (?, ?)',
+                    [questionVersionId, answer]
+                );
+                answerId = (result as mysql.ResultSetHeader).insertId;
+            }
+
+            // 处理新的评分点
+            for (const point of scoringPoints) {
+                // 插入新的评分点
+                await conn.execute(
+                    'INSERT INTO scoring_point (content, score, std_answer_id) VALUES (?, ?, ?)',
+                    [point.content, point.score, answerId]
                 );
             }
 
@@ -330,7 +339,7 @@ export async function getTotalStandardQuestionsAfterFiltered(
 
     // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
     // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的���名一致。
-    // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数，或者���使用别名。
+    // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数���或者���使用别名。
     // 为了简单起见，这里直接替换查询中的别名以匹配 buildStdQuestionFilter 的输出。
     // 一个更���壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
 

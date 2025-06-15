@@ -174,6 +174,7 @@ CREATE TABLE score_process(
     description TEXT NOT NULL,
     score DECIMAL NOT NULL,
     scoring_point_content TEXT NOT NULL,
+    scoring_point_max_score DECIMAL NOT NULL,
     model_answer_id INT NOT NULL REFERENCES model_answer(id)
 );
 

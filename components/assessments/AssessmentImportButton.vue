@@ -39,6 +39,7 @@ async function handleSubmit() {
     } catch (error) {
       toast.add({
         title: "Invalid JSON format",
+        description: "The file does not contain valid JSON data. Please check the file content.",
         color: 'error'
       })
       loading.value = false
@@ -48,8 +49,8 @@ async function handleSubmit() {
     // Validate required fields
     if (!assessmentData.dataset_version_id || !assessmentData.model || !Array.isArray(assessmentData.model_answers)) {
       toast.add({
-        title: "Data format error",
-        description: "Missing required fields",
+        title: "Data Format Error",
+        description: "Missing required fields: dataset_version_id, model, or model_answers",
         color: 'error'
       })
       loading.value = false
@@ -62,7 +63,7 @@ async function handleSubmit() {
     });
 
     toast.add({
-      title: "Assessment imported successfully",
+      title: "Assessment Imported Successfully",
       description: `Assessment ID: ${response.assessment_id}`,
       color: 'success'
     })
@@ -70,8 +71,8 @@ async function handleSubmit() {
     emit('import-success')
   } catch (error: any) {
     toast.add({
-      title: "Import failed",
-      description: error.message || "Unknown error",
+      title: "Import Failed",
+      description: error.message || "Unknown error occurred during import",
       color: 'error'
     })
   } finally {
@@ -121,7 +122,8 @@ async function handleSubmit() {
           "type": "score type",
           "description": "score description",
           "score": number,
-          "scoring_point_content": "scoring point content"
+          "scoring_point_content": "scoring point content",
+          "scoring_point_max_score": number,
         }
       ]
     }

@@ -3,9 +3,15 @@ import type { Assessment } from "~/server/types/mysql";
 import type { TableColumn } from '@nuxt/ui-pro'
 import Pagination from "~/components/common/Pagination.vue";
 import {UButton} from "#components";
+import AssessmentModal from "~/components/assessments/AssessmentModal.vue";
 
 const data = ref<Assessment[]>([]);
 const loading = ref(true);
+
+// 控制 Modal 的显示状态
+const isModalOpen = ref(false);
+// 选中的 assessment 数据
+const selectedAssessment = ref<Assessment | null>(null);
 
 const sorting = ref([
   {
@@ -13,6 +19,13 @@ const sorting = ref([
     desc: true
   }
 ])
+
+// 打开 Modal 并设置选中的 assessment
+function openAssessmentModal(assessment: Assessment) {
+  console.log("Opening modal with assessment:", assessment);
+  selectedAssessment.value = assessment;
+  isModalOpen.value = true;
+}
 
 watch(sorting, async () => {
   await fetchData();
@@ -102,7 +115,18 @@ const columns: TableColumn<Assessment>[] = [
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }: { row: any }) => h('div', {}), // 暂时不展示任何内容
+    cell: ({ row }: { row: any }) => {
+      return h('div', { class: 'flex gap-2' }, [
+        h(UButton, {
+          label: 'View',
+          color: "neutral",
+          variant: "outline",
+          size: 'sm',
+          icon: 'i-lucide-eye',
+          onClick: () => openAssessmentModal(row.original)
+        })
+      ]);
+    }
   }
 ]
 
@@ -169,6 +193,12 @@ defineExpose({
       v-model:page="page"
       v-model:page_size="page_size"
       :total="total"
+  />
+
+  <!-- 修正 prop 名称的绑定 -->
+  <AssessmentModal
+    v-model:isOpen="isModalOpen"
+    :assessment="selectedAssessment"
   />
 </template>
 

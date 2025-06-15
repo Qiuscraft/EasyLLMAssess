@@ -47,7 +47,6 @@ const handleSubmit = async () => {
     await $fetch('/api/v1/candidate-answer', {
       method: 'POST',
       body: {
-        std_question_id: props.question.id,
         std_question_version_id: currentVersion.value.id,
         username: username.value,
         answer: answer.value,

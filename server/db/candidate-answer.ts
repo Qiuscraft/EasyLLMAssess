@@ -2,11 +2,11 @@ import {withConnection} from "~/server/db/connection";
 import {ResultSetHeader} from "mysql2";
 import {CandidateAnswer, StdQuestionWithoutAnswer} from "~/server/types/mysql";
 
-export async function postCandidateAnswer(std_question_id: number, answer: string, username: string): Promise<number> {
+export async function postCandidateAnswer(std_question_version_id: number, answer: string, username: string): Promise<number> {
     return await withConnection(async (conn) => {
         const [result] = await conn.execute(
-            'INSERT INTO candidate_answer (author, content, std_question_id) VALUES (?, ?, ?)',
-            [username, answer, std_question_id]
+            'INSERT INTO candidate_answer (author, content, std_question_version_id) VALUES (?, ?, ?)',
+            [username, answer, std_question_version_id]
         );
 
         return (result as ResultSetHeader).insertId;

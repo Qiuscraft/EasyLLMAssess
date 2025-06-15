@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type {Dataset, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
-import {h} from "vue";
 import {UButton, UInput, USelect} from "#components";
 import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 import Pagination from "~/components/common/Pagination.vue";

@@ -56,7 +56,7 @@ BEGIN
         -- 如果旧分类存在，减少其计数
         IF OLD.category IS NOT NULL AND OLD.category != '' THEN
             UPDATE category SET question_count = question_count - 1 WHERE name = OLD.category;
-            -- 如果计数变为0，删除该分类
+            -- ��果计数变为0，删除该分类
             DELETE FROM category WHERE name = OLD.category AND question_count <= 0;
         END IF;
 
@@ -176,3 +176,107 @@ CREATE TABLE score_process(
     scoring_point_content TEXT NOT NULL,
     model_answer_id INT NOT NULL REFERENCES model_answer(id)
 );
+
+-- 添加触发器来自动更新model_answer的total_score
+DELIMITER //
+
+-- 当添加新的score_process记录时，更新相关model_answer的total_score
+CREATE TRIGGER after_score_process_insert
+AFTER INSERT ON score_process
+FOR EACH ROW
+BEGIN
+    UPDATE model_answer
+    SET total_score = (
+        SELECT SUM(score)
+        FROM score_process
+        WHERE model_answer_id = NEW.model_answer_id
+    )
+    WHERE id = NEW.model_answer_id;
+END//
+
+-- 当更新score_process记录时，更新相关model_answer的total_score
+CREATE TRIGGER after_score_process_update
+AFTER UPDATE ON score_process
+FOR EACH ROW
+BEGIN
+    UPDATE model_answer
+    SET total_score = (
+        SELECT SUM(score)
+        FROM score_process
+        WHERE model_answer_id = NEW.model_answer_id
+    )
+    WHERE id = NEW.model_answer_id;
+END//
+
+-- 当删除score_process记录时，更新相关model_answer的total_score
+CREATE TRIGGER after_score_process_delete
+AFTER DELETE ON score_process
+FOR EACH ROW
+BEGIN
+    UPDATE model_answer
+    SET total_score = COALESCE((
+        SELECT SUM(score)
+        FROM score_process
+        WHERE model_answer_id = OLD.model_answer_id
+    ), 0)
+    WHERE id = OLD.model_answer_id;
+END//
+
+-- 添加触发器来自动更新assessment的total_score
+-- 当添加新的model_answer记录时，更新相关assessment的total_score
+CREATE TRIGGER after_model_answer_insert
+AFTER INSERT ON model_answer
+FOR EACH ROW
+BEGIN
+    UPDATE assessment
+    SET total_score = (
+        SELECT SUM(total_score)
+        FROM model_answer
+        WHERE assessment_id = NEW.assessment_id
+    )
+    WHERE id = NEW.assessment_id;
+END//
+
+-- 当更新model_answer记录时，更新相关assessment的total_score
+CREATE TRIGGER after_model_answer_update
+AFTER UPDATE ON model_answer
+FOR EACH ROW
+BEGIN
+    IF OLD.total_score != NEW.total_score OR OLD.assessment_id != NEW.assessment_id THEN
+        -- 更新旧assessment的total_score（如果assessment_id发生了变化）
+        IF OLD.assessment_id != NEW.assessment_id THEN
+            UPDATE assessment
+            SET total_score = COALESCE((
+                SELECT SUM(total_score)
+                FROM model_answer
+                WHERE assessment_id = OLD.assessment_id
+            ), 0)
+            WHERE id = OLD.assessment_id;
+        END IF;
+
+        -- 更新新assessment的total_score
+        UPDATE assessment
+        SET total_score = (
+            SELECT SUM(total_score)
+            FROM model_answer
+            WHERE assessment_id = NEW.assessment_id
+        )
+        WHERE id = NEW.assessment_id;
+    END IF;
+END//
+
+-- 当删除model_answer记录时，更新相关assessment的total_score
+CREATE TRIGGER after_model_answer_delete
+AFTER DELETE ON model_answer
+FOR EACH ROW
+BEGIN
+    UPDATE assessment
+    SET total_score = COALESCE((
+        SELECT SUM(total_score)
+        FROM model_answer
+        WHERE assessment_id = OLD.assessment_id
+    ), 0)
+    WHERE id = OLD.assessment_id;
+END//
+
+DELIMITER ;

@@ -29,3 +29,29 @@ Start the development server on `http://localhost:3000`:
 ```bash
 pnpm dev
 ```
+
+## Project File Structure
+
+```text
+.
+├── assets # Static assets like images and styles
+├── components # Vue components
+├── pages # Nuxt.js pages
+├── public # Publicly accessible files
+├── server # Server-side code
+|   ├── api # API endpoints
+|   ├── db # Database connection and operations
+|   |   ├── connection.ts # MySQL connection provider
+|   |   └── ... # Other database-related operations
+|   └── types # Type definitions for server-side code
+├── stores # Pinia stores for state management
+├── utils # Utility functions
+├── .gitignore # Git ignore file
+├── app.vue # Main Vue app file
+├── create_table.sql # SQL script to create database tables
+├── nuxt.config.js # Nuxt.js configuration file
+├── package.json # Project dependencies and scripts
+├── pnpm-lock.yaml # Lock file for dependencies
+├── README.md # Project documentation
+├── tsconfig.json # TypeScript configuration file
+```

@@ -193,6 +193,36 @@ const columns: TableColumn<Dataset>[] = [
     },
   },
   {
+    accessorKey: 'versionId',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Version ID',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
+    cell: ({ row }) => {
+      const dataset = row.original;
+      const selectedVersionId = selectedVersions.value[dataset.id];
+
+      if (!dataset.versions || dataset.versions.length === 0) {
+        return 'N/A';
+      }
+
+      // 返回当前选中版本的ID
+      return selectedVersionId || (dataset.versions.length > 0 ? dataset.versions[0].id : 'N/A');
+    },
+  },
+  {
     accessorKey: 'createdAt',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()

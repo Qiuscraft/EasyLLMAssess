@@ -483,7 +483,7 @@ const getTagColorByFirstLetter = (tag: string): string => {
                 v-if="viewingVersion.answer"
                 :data="viewingVersion.answer.scoringPoints"
                 :columns="[
-                { accessorKey: 'content', header: 'Point' },
+                { accessorKey: 'content', header: 'Scoring Point' },
                 { accessorKey: 'score', header: 'Score' }
               ]"
             />

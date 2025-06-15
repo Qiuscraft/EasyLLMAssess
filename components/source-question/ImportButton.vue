@@ -6,6 +6,38 @@ const loading = ref(false)
 
 const toast = useToast()
 
+const exampleJson = `[
+  {
+    "content": "string",
+    "answers": [
+      "string"
+    ],
+    "std_questions": [
+      {
+        "versions": [
+          {
+            "content": "string",
+            "version": "string",
+            "category": "string",
+            "tags": [
+              "string"
+            ],
+            "answer": {
+              "content": "string",
+              "scoring_points": [
+                {
+                  "content": "string",
+                  "score": "string"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]`
+
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target?.files?.[0]
@@ -50,7 +82,14 @@ async function handleSubmit() {
     <UButton label="Import Source Questions" color="neutral" variant="subtle" />
 
     <template #body>
-      <UInput type="file" @change="handleFileChange" />
+      <div class="space-y-4">
+        <UInput type="file" @change="handleFileChange" />
+
+        <div class="text-sm text-gray-500">
+          <p>File format requirements:</p>
+          <pre class="bg-gray-100 p-2 rounded mt-2 text-xs overflow-auto">{{ exampleJson }}</pre>
+        </div>
+      </div>
     </template>
 
     <template #footer>

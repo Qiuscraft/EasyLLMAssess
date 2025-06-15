@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {Dataset, DatasetVersion, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
+import type {Dataset, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
 import {UButton, UInput, USelect} from "#components";

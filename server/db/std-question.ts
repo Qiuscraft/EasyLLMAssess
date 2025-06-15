@@ -151,9 +151,9 @@ export async function getStandardQuestionsAfterFiltered(
     const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
     const offset = (page - 1) * page_size;
 
-    // 第一步：获取满足条件的问题ID和版本ID
-    const paginatedStdQuestionAndVersionQuery = `
-        SELECT DISTINCT sq_filter.id AS question_id, sqv_filter.id AS version_id
+    // 第一步：获取满足条件的问题ID（不再获取版本ID），确保每页问题数量正确
+    const paginatedStdQuestionQuery = `
+        SELECT DISTINCT sq_filter.id AS question_id
         FROM std_question sq_filter
         JOIN std_question_version sqv_filter ON sq_filter.id = sqv_filter.std_question_id
         LEFT JOIN std_answer sa_filter ON sqv_filter.id = sa_filter.std_question_version_id
@@ -163,20 +163,36 @@ export async function getStandardQuestionsAfterFiltered(
         OFFSET ${offset}
     `;
 
-    const [idRows] = await conn.execute(paginatedStdQuestionAndVersionQuery, [...subQueryFilterParams]);
+    const [idRows] = await conn.execute(paginatedStdQuestionQuery, [...subQueryFilterParams]);
 
     if (!idRows || (idRows as any[]).length === 0) {
         return [];
     }
 
-    // 提取问题ID和版本ID
-    const filteredPairs = (idRows as any[]).map(row => ({
+    // 提取问题ID
+    const stdQuestionIds = (idRows as any[]).map(row => row.question_id);
+
+    // 第二步：获取这些问题ID下所有符合筛选条件的版本ID
+    const versionQuery = `
+        SELECT sqv_filter.id AS version_id, sq_filter.id AS question_id
+        FROM std_question sq_filter
+        JOIN std_question_version sqv_filter ON sq_filter.id = sqv_filter.std_question_id
+        LEFT JOIN std_answer sa_filter ON sqv_filter.id = sa_filter.std_question_version_id
+        ${whereClauseForSubQuery}
+        AND sq_filter.id IN (${stdQuestionIds.map(() => '?').join(',')})
+    `;
+
+    const [versionRows] = await conn.execute(versionQuery, [...subQueryFilterParams, ...stdQuestionIds]);
+
+    if (!versionRows || (versionRows as any[]).length === 0) {
+        return [];
+    }
+
+    // 提取符合条件的版本ID
+    const filteredPairs = (versionRows as any[]).map(row => ({
         questionId: row.question_id,
         versionId: row.version_id
     }));
-
-    // ���取唯一的问题ID列表
-    const stdQuestionIds = [...new Set(filteredPairs.map(pair => pair.questionId))];
 
     // 创建问题ID到其符合条件的版本ID的映射
     const questionToVersionsMap = new Map<number, number[]>();
@@ -186,6 +202,9 @@ export async function getStandardQuestionsAfterFiltered(
         }
         questionToVersionsMap.get(pair.questionId)!.push(pair.versionId);
     }
+
+    // 收集所有版本ID
+    const allVersionIds = filteredPairs.map(pair => pair.versionId);
 
     const mainQuery = `
         SELECT sq.id          AS std_q_id,
@@ -211,7 +230,7 @@ export async function getStandardQuestionsAfterFiltered(
                  LEFT JOIN
              scoring_point sp ON sa.id = sp.std_answer_id
         WHERE sq.id IN (${stdQuestionIds.map(() => '?').join(',')})
-        AND sqv.id IN (${filteredPairs.map(() => '?').join(',')})
+        AND sqv.id IN (${allVersionIds.map(() => '?').join(',')})
         ORDER BY FIELD(sq.id, ${stdQuestionIds.map(() => '?').join(',')}),
                  sqv.id,
                  sa.id,
@@ -222,7 +241,7 @@ export async function getStandardQuestionsAfterFiltered(
     // 构建查询参数：问题ID + 版本ID + 问题ID（用于ORDER BY FIELD）
     const mainQueryParams = [
         ...stdQuestionIds,
-        ...filteredPairs.map(pair => pair.versionId),
+        ...allVersionIds,
         ...stdQuestionIds
     ];
 
@@ -311,11 +330,11 @@ export async function getTotalStandardQuestionsAfterFiltered(
 
     // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
     // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的���名一致。
-    // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数，或者不使用别名。
+    // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数，或者���使用别名。
     // 为了简单起见，这里直接替换查询中的别名以匹配 buildStdQuestionFilter 的输出。
     // 一个更���壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
 
-    // 当前 buildStdQuestionFilter 使用的别名是：
+    // ��前 buildStdQuestionFilter 使用的别名是：
     // std_question -> sq_filter
     // std_question_version -> sqv_filter
     // std_answer -> sa_filter

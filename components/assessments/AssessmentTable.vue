@@ -62,25 +62,38 @@ const columns: TableColumn<Assessment>[] = [
     header: 'Score',
     cell: ({ row }: { row: any }) => {
       const assessment = row.original;
-      const totalScore = assessment.totalScore || 0;
 
-      console.log('Assessment data:', assessment); // 添加调试日志，检查数据结构
-
+      // 计算正确的总分，而不是使用后端传回的可能有误的 totalScore
+      let calculatedTotalScore = 0;
       // 计算最大分数
       let maxScore = 0;
+
       if (assessment.modelAnswers && assessment.modelAnswers.length > 0) {
-        console.log('Model answers:', assessment.modelAnswers); // 添加调试日志
         assessment.modelAnswers.forEach(answer => {
+          // 计算单个 ModelAnswer 的总分
+          let modelAnswerScore = 0;
+
           if (answer.scoreProcesses && answer.scoreProcesses.length > 0) {
             answer.scoreProcesses.forEach(process => {
+              // 累加每个评分过程的得分
+              modelAnswerScore += Number(process.score) || 0;
+              // 累加最大可能得分
               maxScore += Number(process.scoringPointMaxScore) || 0;
             });
           }
+
+          // 更新 ModelAnswer 的 totalScore
+          answer.totalScore = modelAnswerScore;
+          // 累加到总评分
+          calculatedTotalScore += modelAnswerScore;
         });
       }
 
+      // 更新 assessment 的总分为计算出的正确值
+      assessment.totalScore = calculatedTotalScore;
+
       // 格式化为两位小数
-      const formattedTotal = Number(totalScore).toFixed(2);
+      const formattedTotal = Number(calculatedTotalScore).toFixed(2);
       const formattedMax = Number(maxScore).toFixed(2);
 
       return `${formattedTotal}/${formattedMax}`;

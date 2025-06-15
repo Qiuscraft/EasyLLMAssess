@@ -56,7 +56,7 @@ BEGIN
         -- 如果旧分类存在，减少其计数
         IF OLD.category IS NOT NULL AND OLD.category != '' THEN
             UPDATE category SET question_count = question_count - 1 WHERE name = OLD.category;
-            -- ��果计数变为0，删除该分类
+            -- 如果计数变为0，删除该分类
             DELETE FROM category WHERE name = OLD.category AND question_count <= 0;
         END IF;
 

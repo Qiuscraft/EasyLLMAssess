@@ -24,6 +24,7 @@ const selectedCategory = ref(''); // 添加分类筛选变量
 const selectedTags = ref<string[]>([]); // 添加标签筛选变量
 const tagOptions = ref<{ label: string; value: string }[]>([]);
 const delay = ref(0);
+const frontendDelay = ref(0);
 
 const params = computed(() => {
   return {
@@ -40,6 +41,7 @@ const params = computed(() => {
 });
 
 async function fetchData() {
+  const startTime = performance.now(); // 记录开始时间
   loading.value = true;
   try {
     const response = await $fetch('/api/v1/std-question', {
@@ -66,6 +68,9 @@ async function fetchData() {
       color: 'error'
     });
   } finally {
+    const endTime = performance.now(); // 记录结束时间
+    const loadTime = endTime - startTime; // 计算时间差
+    frontendDelay.value = loadTime.toFixed(2);
     loading.value = false;
   }
 }
@@ -452,7 +457,7 @@ const getTagColorByFirstLetter = (tag: string): string => {
   <div class="flex-1 w-full">
     <CreateDatasetButton :id_list="selected_version_id_list" @submit="handleSubmit" />
 
-    <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">It causes {{delay}} ms to fetch data.</span>
+    <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">It causes {{delay}} ms for backend and {{frontendDelay}} ms for frontend to fetch data.</span>
 
     <UTable
         sticky

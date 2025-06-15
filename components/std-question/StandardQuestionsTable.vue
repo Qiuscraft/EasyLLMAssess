@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { h, resolveComponent } from 'vue'
 import type {StdQuestion, StdQuestionVersion, Category} from "~/server/types/mysql";
-import { UButton, USelect, UCheckbox, UTable, UBadge } from "#components"; // 移除了不需要的UInput组件
+import { UButton, USelect, UCheckbox, UTable, UBadge } from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
 import {responseToStdQuestions, sortStdQuestionVersionsByCreationTime} from "~/utils/std-question";
 import FloatingLabeledInput from "~/components/common/FloatingLabeledInput.vue";
-
-// 使用resolveComponent方式获取TableColumn组件
-const TableColumn = resolveComponent('TableColumn')
 
 const data = ref<StdQuestion[]>([]);
 const loading = ref(true);

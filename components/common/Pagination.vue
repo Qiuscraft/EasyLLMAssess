@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<{
   page_size: 5,
   total: 0,
   description: 'Items Per Page',
-  page_size_items: () => [5, 10, 20, 50, 100]
+  page_size_items: () => [5, 10, 20, 50, 100, 1000, 10000]
 });
 
 // 定义用于双向绑定的事件

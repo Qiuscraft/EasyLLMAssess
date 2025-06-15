@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type {Dataset, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
+import type {Dataset, DatasetVersion, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
 import {h} from "vue";
-import {UButton, UInput} from "#components";
+import {UButton, UInput, USelect} from "#components";
 import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 import Pagination from "~/components/common/Pagination.vue";
 
@@ -30,6 +30,9 @@ const datasets = ref<Dataset[]>([])
 const loading = ref(true)
 const total = ref(0)
 
+// 用于跟踪每个数据集选中的版本
+const selectedVersions = ref<Record<number, number>>({})
+
 async function fetchData() {
   loading.value = true;
   datasets.value = [];
@@ -40,6 +43,14 @@ async function fetchData() {
     });
     total.value = response.total;
     datasets.value = response.datasets;
+
+    // 初始化每个数据集的选中版本为最新版本
+    datasets.value.forEach(dataset => {
+      if (dataset.versions && dataset.versions.length > 0) {
+        // 假设版本按时间降序排序，第一个是最新的
+        selectedVersions.value[dataset.id] = dataset.versions[0].id;
+      }
+    });
   } catch (error) {
     useToast().add({
       title: "Data Load Failed",
@@ -56,14 +67,29 @@ onMounted(async () => {
 })
 
 const viewingRow = ref<Dataset | null>(null)
+// 当前查看的数据集版本ID
+const currentViewingVersionId = ref<number | null>(null)
+
+// 获取当前选中版本的数据集版本对象
+const getCurrentDatasetVersion = (dataset: Dataset) => {
+  if (!dataset.versions || dataset.versions.length === 0) return null;
+
+  const selectedVersionId = selectedVersions.value[dataset.id];
+  return dataset.versions.find(v => v.id === selectedVersionId) || dataset.versions[0];
+}
+
 const formattedQuestions = computed<StdQuestion[]>(() => {
   if (!viewingRow.value) return [];
 
-  // 将questionVersions转换为StdQuestion格式
+  // 获取当前选中的数据集版本
+  const currentVersion = getCurrentDatasetVersion(viewingRow.value);
+  if (!currentVersion) return [];
+
+  // 将stdQuestionVersions转换为StdQuestion格式
   const questionVersionsMap = new Map<number, StdQuestionVersion[]>();
 
   // 按stdQuestionId分组
-  viewingRow.value.questionVersions.forEach(version => {
+  currentVersion.stdQuestionVersions.forEach(version => {
     if (!questionVersionsMap.has(version.stdQuestionId)) {
       questionVersionsMap.set(version.stdQuestionId, []);
     }
@@ -96,7 +122,7 @@ const columns: TableColumn<Dataset>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => `${row.getValue('id')}`
+    cell: ({ row }) => `${row.original.id}`
   },
   {
     accessorKey: 'name',
@@ -116,7 +142,7 @@ const columns: TableColumn<Dataset>[] = [
         ])
       ])
     },
-    cell: ({ row }) => `${row.getValue('name')}`,
+    cell: ({ row }) => `${row.original.name}`,
   },
   {
     accessorKey: 'version',
@@ -136,10 +162,39 @@ const columns: TableColumn<Dataset>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => `${row.getValue('version')}`,
+    cell: ({ row }) => {
+      const dataset = row.original;
+
+      // 如果没有版本或只有一个版本，直接显示版本文本
+      if (!dataset.versions || dataset.versions.length <= 1) {
+        return dataset.versions && dataset.versions.length > 0
+          ? dataset.versions[0].version
+          : 'N/A';
+      }
+
+      // 多个版本时，使用USelect显示版本选择器
+      const selectedVersionId = selectedVersions.value[dataset.id] ||
+        (dataset.versions.length > 0 ? dataset.versions[0].id : null);
+
+      // 为USelect准备版本选项
+      const options = dataset.versions.map(v => ({
+        label: v.version,
+        value: v.id,
+      }));
+
+      return h(USelect, {
+        modelValue: selectedVersionId,
+        options: options,
+        'onUpdate:modelValue': (newValue: number) => {
+          selectedVersions.value[dataset.id] = newValue;
+        },
+        size: 'sm',
+        class: 'w-32'
+      });
+    },
   },
   {
-    accessorKey: 'created_at',
+    accessorKey: 'createdAt',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
 
@@ -156,7 +211,11 @@ const columns: TableColumn<Dataset>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleString(),
+    cell: ({ row }) => {
+      const dataset = row.original;
+      const currentVersion = getCurrentDatasetVersion(dataset);
+      return currentVersion ? new Date(currentVersion.createdAt).toLocaleString() : 'N/A';
+    },
   },
   {
     id: 'view',
@@ -165,7 +224,10 @@ const columns: TableColumn<Dataset>[] = [
       label: 'View',
       color: 'neutral',
       variant: 'subtle',
-      onClick: () => viewingRow.value = row.original
+      onClick: () => {
+        viewingRow.value = row.original;
+        currentViewingVersionId.value = selectedVersions.value[row.original.id];
+      }
     })
   },
 ]
@@ -197,10 +259,31 @@ const columnPinning = ref({
 
   <UModal v-if="viewingRow" v-model:open="viewingRow" fullscreen :title="`Dataset #${viewingRow.id}`">
     <template #body>
-      <UPageCard
-          :title="`${viewingRow.name} - ${viewingRow.version}`"
-          :description="`Created At: ${viewingRow.created_at}`"
-      >
+      <UPageCard v-if="viewingRow">
+        <template #title>
+          {{ viewingRow.name }}
+        </template>
+        <template #description>
+          <div class="flex items-center gap-4">
+            <div v-if="viewingRow.versions && viewingRow.versions.length > 1" class="flex items-center gap-2">
+              <span>Version:</span>
+              <USelect
+                v-model="selectedVersions[viewingRow.id]"
+                :options="viewingRow.versions.map(v => ({ label: v.version, value: v.id }))"
+                size="sm"
+                class="w-40"
+              />
+            </div>
+            <div v-else-if="viewingRow.versions && viewingRow.versions.length === 1">
+              <span>Version: {{ viewingRow.versions[0].version }}</span>
+            </div>
+
+            <div v-if="getCurrentDatasetVersion(viewingRow)">
+              <span>Created: {{ new Date(getCurrentDatasetVersion(viewingRow)!.createdAt).toLocaleString() }}</span>
+            </div>
+          </div>
+        </template>
+
         <StdQuestionsCard :questions="formattedQuestions" />
       </UPageCard>
     </template>

@@ -75,7 +75,7 @@ export async function getDatasets(id: number | undefined = undefined,
       'created_at': 'dv.created_at'
     };
 
-    const mappedOrderField = orderFieldMap[order_field] || 'd.created_at';
+    const mappedOrderField = orderFieldMap[order_field] || 'dv.created_at';
     const orderDirection = order_by === 'desc' ? 'DESC' : 'ASC';
 
     // 计算分页
@@ -92,115 +92,146 @@ export async function getDatasets(id: number | undefined = undefined,
     const [countResult] = await conn.execute(countQuery, params);
     const total = (countResult as any)[0].total;
 
-    // 查询数据集
+    // 查询数据集基本信息
     const datasetsQuery = `
-      SELECT 
-        d.id, 
-        d.name, 
-        dv.id as version_id,
-        dv.name as version, 
-        dv.created_at
+      SELECT DISTINCT d.id, d.name, MAX(dv.created_at) as latest_created_at
       FROM dataset d
       JOIN dataset_version dv ON d.id = dv.dataset_id
       ${whereClause}
-      ORDER BY ${mappedOrderField} ${orderDirection}
+      GROUP BY d.id, d.name
+      ORDER BY latest_created_at ${orderDirection}
       LIMIT ${page_size} OFFSET ${offset}
     `;
 
     const [datasetsResult] = await conn.execute(datasetsQuery, [...params]);
-    const datasets = datasetsResult as any[];
+    const datasetsMap = new Map();
 
-    // 查询每个数据集关联的问题
-    for (const dataset of datasets) {
-      const questionsQuery = `
+    // 创建数据集对象
+    for (const row of datasetsResult as any[]) {
+      datasetsMap.set(row.id, {
+        id: row.id,
+        name: row.name,
+        versions: []
+      });
+    }
+
+    // 查询每个数据集的所有版本
+    for (const datasetId of datasetsMap.keys()) {
+      const versionsQuery = `
         SELECT 
-          sq.id,
-          sqv.id as version_id, 
-          sqv.content,
-          sqv.version,
-          sqv.category,
-          sqv.created_at,
-          sqv.std_question_id
-        FROM std_question sq
-        JOIN std_question_version sqv ON sq.id = sqv.std_question_id
-        JOIN dataset_question dq ON sqv.id = dq.std_question_version_id
-        JOIN dataset_version dv ON dq.version_id = dv.id
-        WHERE dv.dataset_id = ? AND dv.id = ?
+          dv.id,
+          dv.name as version,
+          dv.created_at as createdAt
+        FROM dataset_version dv
+        WHERE dv.dataset_id = ?
+        ORDER BY dv.created_at DESC
       `;
 
-      const [questionsResult] = await conn.execute(questionsQuery, [dataset.id, dataset.version_id]);
-      const questionVersions: StdQuestionVersion[] = [];
+      const [versionsResult] = await conn.execute(versionsQuery, [datasetId]);
+      const versions = [];
 
-      for (const row of questionsResult as any[]) {
-        // 为每个问题查询标签
-        const tagsQuery = `
-          SELECT t.tag
-          FROM tag t
-          JOIN question_tag qt ON t.id = qt.tag_id
-          WHERE qt.std_question_version_id = ?
+      // 处理每个版本
+      for (const versionRow of versionsResult as any[]) {
+        const versionId = versionRow.id;
+
+        // 查询该版本关联的问题
+        const questionsQuery = `
+          SELECT 
+            sq.id,
+            sqv.id as version_id, 
+            sqv.content,
+            sqv.version,
+            sqv.category,
+            sqv.created_at,
+            sqv.std_question_id
+          FROM std_question sq
+          JOIN std_question_version sqv ON sq.id = sqv.std_question_id
+          JOIN dataset_question dq ON sqv.id = dq.std_question_version_id
+          WHERE dq.version_id = ?
         `;
 
-        const [tagsResult] = await conn.execute(tagsQuery, [row.version_id]);
-        const tags = (tagsResult as any[]).map(tag => tag.tag);
+        const [questionsResult] = await conn.execute(questionsQuery, [versionId]);
+        const stdQuestionVersions: StdQuestionVersion[] = [];
 
-        // 查询标准答案
-        const answerQuery = `
-          SELECT
-            sa.id,
-            sa.content
-          FROM std_answer sa
-          WHERE sa.std_question_version_id = ?
-        `;
-
-        const [answerResult] = await conn.execute(answerQuery, [row.version_id]);
-        let answer = undefined;
-
-        if ((answerResult as any[]).length > 0) {
-          const answerRow = (answerResult as any[])[0];
-
-          // 查询评分点
-          const pointsQuery = `
-            SELECT
-              content,
-              score
-            FROM scoring_point
-            WHERE std_answer_id = ?
+        for (const row of questionsResult as any[]) {
+          // 为每个问题查询标签
+          const tagsQuery = `
+            SELECT t.tag
+            FROM tag t
+            JOIN question_tag qt ON t.id = qt.tag_id
+            WHERE qt.std_question_version_id = ?
           `;
 
-          const [pointsResult] = await conn.execute(pointsQuery, [answerRow.id]);
-          const scoringPoints = (pointsResult as any[]).map(point => ({
-            content: point.content,
-            score: point.score
-          }));
+          const [tagsResult] = await conn.execute(tagsQuery, [row.version_id]);
+          const tags = (tagsResult as any[]).map(tag => tag.tag);
 
-          answer = {
-            id: answerRow.id,
-            content: answerRow.content,
-            scoringPoints: scoringPoints
+          // 查询标准答案
+          const answerQuery = `
+            SELECT
+              sa.id,
+              sa.content
+            FROM std_answer sa
+            WHERE sa.std_question_version_id = ?
+          `;
+
+          const [answerResult] = await conn.execute(answerQuery, [row.version_id]);
+          let answer = undefined;
+
+          if ((answerResult as any[]).length > 0) {
+            const answerRow = (answerResult as any[])[0];
+
+            // 查询评分点
+            const pointsQuery = `
+              SELECT
+                content,
+                score
+              FROM scoring_point
+              WHERE std_answer_id = ?
+            `;
+
+            const [pointsResult] = await conn.execute(pointsQuery, [answerRow.id]);
+            const scoringPoints = (pointsResult as any[]).map(point => ({
+              content: point.content,
+              score: point.score
+            }));
+
+            answer = {
+              id: answerRow.id,
+              content: answerRow.content,
+              scoringPoints: scoringPoints
+            };
+          }
+
+          // 构建符合 StdQuestionVersion 接口的对象
+          const questionVersion: StdQuestionVersion = {
+            id: row.version_id,
+            version: row.version,
+            createdAt: row.created_at,
+            content: row.content,
+            answer: answer,
+            category: row.category || undefined,
+            tags: tags.length > 0 ? tags : undefined,
+            stdQuestionId: row.std_question_id
           };
+
+          stdQuestionVersions.push(questionVersion);
         }
 
-        // 构建符合 StdQuestionVersion 接口的对象
-        const questionVersion: StdQuestionVersion = {
-          id: row.version_id,
-          version: row.version,
-          createdAt: row.created_at,
-          content: row.content,
-          answer: answer,
-          category: row.category || undefined,
-          tags: tags.length > 0 ? tags : undefined,
-          stdQuestionId: row.std_question_id
-        };
-
-        questionVersions.push(questionVersion);
+        // 构建版本对象
+        versions.push({
+          id: versionRow.id,
+          version: versionRow.version,
+          createdAt: versionRow.createdAt,
+          stdQuestionVersions: stdQuestionVersions
+        });
       }
 
-      // 将查询结果转换为 Dataset 接口格式
-      dataset.questionVersions = questionVersions;
-
-      // 删除不符合接口的多余属性
-      delete dataset.questions;
+      // 将版本数组添加到数据集对象
+      datasetsMap.get(datasetId).versions = versions;
     }
+
+    // 将 Map 转换为数组
+    const datasets = Array.from(datasetsMap.values());
 
     return {
       datasets,

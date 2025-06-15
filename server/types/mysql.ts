@@ -45,9 +45,14 @@ export interface StdQuestionWithoutAnswer {
 export interface Dataset {
     id: number;
     name: string;
+    versions: DatasetVersion[];
+}
+
+export interface DatasetVersion {
+    id: number;
     version: string;
-    created_at: string;
-    questionVersions: StdQuestionVersion[];
+    createdAt: Date;
+    stdQuestionVersions: StdQuestionVersion[];
 }
 
 export interface CandidateAnswer {

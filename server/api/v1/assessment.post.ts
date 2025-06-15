@@ -3,6 +3,9 @@ import { createAssessment } from '~/server/db/assessment';
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
 
+  // 添加调试日志，打印请求体
+  console.log('请求体内容:', JSON.stringify(body, null, 2));
+
   try {
     // 调用数据库函数创建评测
     const assessmentId = await createAssessment({

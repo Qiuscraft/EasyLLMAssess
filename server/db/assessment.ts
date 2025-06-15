@@ -6,6 +6,7 @@ export interface ScoreProcess {
   description: string;
   score: number;
   scoring_point_content: string;
+  scoring_point_max_score: number;
 }
 
 export interface ModelAnswer {
@@ -46,13 +47,36 @@ export async function createAssessment(assessment: Assessment): Promise<number> 
 
         // 插入score_process记录
         for (const scoreProcess of modelAnswer.score_processes) {
+          // 添加调试日志，输出每个评分过程的详细信息
+          console.log('处理评分过程:', JSON.stringify(scoreProcess, null, 2));
+
+          // 检查是否有undefined值并提供默认值
+          const type = scoreProcess.type || '';
+          const description = scoreProcess.description || '';
+          const score = scoreProcess.score || 0;
+          const scoringPointContent = scoreProcess.scoring_point_content || '';
+          // 如果scoring_point_max_score为undefined，则设��为0或合适的默认值
+          const scoringPointMaxScore = scoreProcess.scoring_point_max_score !== undefined
+            ? scoreProcess.scoring_point_max_score
+            : 0;
+
+          console.log('处理后的参数:', {
+            type,
+            description,
+            score,
+            scoringPointContent,
+            scoringPointMaxScore,
+            modelAnswerId
+          });
+
           await conn.execute(
-            'INSERT INTO score_process (type, description, score, scoring_point_content, model_answer_id) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO score_process (type, description, score, scoring_point_content, scoring_point_max_score, model_answer_id) VALUES (?, ?, ?, ?, ?, ?)',
             [
-              scoreProcess.type,
-              scoreProcess.description,
-              scoreProcess.score,
-              scoreProcess.scoring_point_content,
+              type,
+              description,
+              score,
+              scoringPointContent,
+              scoringPointMaxScore,
               modelAnswerId
             ]
           );

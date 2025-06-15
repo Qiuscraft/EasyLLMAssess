@@ -72,3 +72,33 @@ export interface TagCount {
     tag: string;     // 标签名称
     count: number;   // 该标签下的问题数量
 }
+
+// 评测相关接口
+export interface Assessment {
+    id: number;
+    model: string;
+    totalScore: number;
+    datasetVersionId: number;
+    datasetVersion?: DatasetVersion;
+    modelAnswers?: ModelAnswer[];
+}
+
+export interface ModelAnswer {
+    id: number;
+    content: string;
+    totalScore: number;
+    stdQuestionVersionId: number;
+    assessmentId: number;
+    questionVersion?: StdQuestionVersion;
+    scoreProcesses?: ScoreProcess[];
+}
+
+export interface ScoreProcess {
+    id: number;
+    type: string;
+    description: string;
+    score: number;
+    scoringPointContent: string;
+    scoringPointMaxScore: number;
+    modelAnswerId: number;
+}

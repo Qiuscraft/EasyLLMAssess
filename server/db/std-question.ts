@@ -12,12 +12,13 @@ export async function getStandardQuestions(
     page_size: number = 5,
     onlyShowAnswered: boolean = false,
     onlyShowNoAnswered: boolean = false,
+    category: string = '',
 ): Promise<{ total: number; total_no_filter: number; std_questions: StdQuestion[] }> {
     return await withConnection(async (conn: mysql.Connection) => {
         return {
-            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered),
+            total: await getTotalStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, category),
             total_no_filter: await getTotalStandardQuestionsNoFilter(conn),
-            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, order_by, page, page_size),
+            std_questions: await getStandardQuestionsAfterFiltered(conn, id, content, answer, onlyShowAnswered, onlyShowNoAnswered, order_by, page, page_size, category),
         }
     });
 }
@@ -93,7 +94,8 @@ function buildStdQuestionFilter(
     content: string,
     answer: string,
     onlyShowAnswered: boolean,
-    onlyShowNoAnswered: boolean = false
+    onlyShowNoAnswered: boolean = false,
+    category: string = ''
 ): { conditions: string[], params: any[], whereClause: string } {
     const idParam = id === undefined ? null : id;
     const filterConditions: string[] = [];
@@ -112,6 +114,11 @@ function buildStdQuestionFilter(
     if (content) {
         filterConditions.push(`${versionTableAlias}.content LIKE ?`);
         filterParams.push(`%${content}%`);
+    }
+
+    if (category) {
+        filterConditions.push(`${versionTableAlias}.category = ?`);
+        filterParams.push(category);
     }
 
     if (onlyShowAnswered) {
@@ -148,13 +155,15 @@ export async function getStandardQuestionsAfterFiltered(
     order_by: string = 'desc',
     page: number = 1,
     page_size: number = 5,
+    category: string = '',
 ): Promise<StdQuestion[]> {
     const { whereClause: whereClauseForSubQuery, params: subQueryFilterParams } = buildStdQuestionFilter(
         id,
         content,
         answer,
         onlyShowAnswered,
-        onlyShowNoAnswered
+        onlyShowNoAnswered,
+        category
     );
 
     const orderDirection = order_by.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
@@ -328,19 +337,21 @@ export async function getTotalStandardQuestionsAfterFiltered(
     answer: string = '',
     onlyShowAnswered: boolean = false,
     onlyShowNoAnswered: boolean = false,
+    category: string = '',
 ): Promise<number> {
     const { whereClause, params } = buildStdQuestionFilter(
         id,
         content,
         answer,
         onlyShowAnswered,
-        onlyShowNoAnswered
+        onlyShowNoAnswered,
+        category
     );
 
     // 在 buildStdQuestionFilter 中，我们为表使用了别名 sq_filter, sqv_filter, sa_filter
     // 在这个 COUNT 查询中，我们需要确保 JOIN 的表和 WHERE 子句中的���名一致。
     // 或者，我们可以让 buildStdQuestionFilter 接受别名作为参数���或者���使用别名。
-    // 为了简单起见，这里直接替换查询中的别名以匹配 buildStdQuestionFilter 的输出。
+    // 为了简单起见，这里直接替换��询中的别名以匹配 buildStdQuestionFilter 的输出。
     // 一个更���壮的解决方案是让 buildStdQuestionFilter 更灵活或调整其内部别名。
 
     // ��前 buildStdQuestionFilter 使用的别名是：

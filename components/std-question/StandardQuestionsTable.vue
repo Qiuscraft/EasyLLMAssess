@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui-pro'
-import type {StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
+import type {StdQuestion, StdQuestionVersion, Category} from "~/server/types/mysql";
 import { UButton } from "#components";
 import CreateDatasetButton from "~/components/std-question/CreateDatasetButton.vue";
 import Pagination from "~/components/common/Pagination.vue";
@@ -25,6 +25,7 @@ const answer = ref('')
 const page_size = ref(5)
 const page = ref(1)
 const onlyShowQuestionWithAnswer = ref(true);
+const selectedCategory = ref(''); // 添加分类筛选变量
 
 const params = computed(() => {
   return {
@@ -34,6 +35,8 @@ const params = computed(() => {
     content: content.value,
     answer: answer.value,
     only_show_answered: onlyShowQuestionWithAnswer.value,
+    // Handle "All Categories" option (value 'all') by sending empty string
+    category: selectedCategory.value === 'all' ? '' : selectedCategory.value,
   };
 });
 
@@ -68,6 +71,7 @@ async function fetchData() {
 }
 
 onMounted(async () => {
+  await fetchCategoryData();
   await fetchData();
   // 确保表格初始状态为降序排序
   if (table?.value?.tableApi) {
@@ -173,11 +177,30 @@ const columns: TableColumn<StdQuestion>[] = [
         modelValue: currentVersionIndex,
         items: versionOptions,
         size: 'sm',
-        class: 'w-24',
         'onUpdate:modelValue': (newValue: number) => {
           changeVersion(questionId, newValue);
         }
       });
+    }
+  },
+  {
+    id: 'category',
+    header: () => {
+      return h(USelect, {
+        modelValue: selectedCategory.value,
+        items: categoryOptions.value,
+        placeholder: "Category",
+        size: "sm",
+        class: "w-48",
+        'onUpdate:modelValue': (newValue: string) => {
+          selectedCategory.value = newValue;
+        }
+      });
+    },
+    cell: ({ row }: { row: any }) => {
+      const questionId = row.original.id;
+      const currentVersion = getCurrentVersion(questionId);
+      return h('div', { class: 'text-sm' }, currentVersion?.category || 'Uncategorized');
     }
   },
   {
@@ -213,7 +236,7 @@ watch([page, page_size], async () => {
   await fetchData();
 }, { deep: true });
 
-watch([content, answer, onlyShowQuestionWithAnswer], async () => {
+watch([content, answer, onlyShowQuestionWithAnswer, selectedCategory], async () => {
   if (page.value === 1) {
     await fetchData();
   } else {
@@ -245,7 +268,7 @@ const selected_version_id_list = computed(() => {
     .filter(id => rowSelection.value[Number(id)])
     .map(Number);
 
-  // 将问题ID转换为对应的当前选中版本的版本ID
+  // 将问题ID�����换为对应的当前选中版本的版本ID
   const versionIds: number[] = [];
   selectedQuestionIds.forEach(questionId => {
     const question = data.value.find(q => q.id === questionId);
@@ -290,10 +313,59 @@ watch (isModalOpen, (newValue) => {
     viewingVersion.value = null;
   }
 })
+
+// 获取分类列表数据
+const categoryOptions = ref<{ label: string; value: string; description?: string }[]>([
+  { label: 'All', value: 'all', description: 'Show all questions' }
+]);
+
+// 获取分类数据
+async function fetchCategoryData() {
+  try {
+    const categories = await $fetch('/api/v1/category', {
+      method: 'GET'
+    }) as Category[];
+
+    // 确保我们已经有了问题总数
+    if (totalNoFilter.value === 0) {
+      // 如果totalNoFilter还没有值，先获取一次问题总数
+      const response = await $fetch('/api/v1/std-question', {
+        method: 'GET',
+        params: {
+          page: 1,
+          page_size: 1,
+        },
+      });
+      totalNoFilter.value = response.total_no_filter || 0;
+    }
+
+    // 将获取的分类数据转换为下拉菜单选项格式
+    const options = categories.map(category => ({
+      label: `${category.name} (${category.count})`,
+      value: category.name,
+      description: `${category.count} questions`
+    }));
+
+    // 保留"全部分类"选项并添加获取的分类
+    // 使用totalNoFilter作为所有问题的总数量，包括未分类的问题
+    categoryOptions.value = [
+      { label: `All (${totalNoFilter.value})`, value: 'all', description: `${totalNoFilter.value} questions total` },
+      ...options
+    ];
+  } catch (error) {
+    useToast().add({
+      title: "Failed to load categories",
+      description: error instanceof Error ? error.message : "Unknown error",
+      color: 'error'
+    });
+  }
+}
 </script>
 
 <template>
-  <UCheckbox v-model="onlyShowQuestionWithAnswer" color="primary" label="Only show the questions that have standard answer" />
+  <div class="flex items-center gap-4 mb-4 flex-wrap">
+    <UCheckbox v-model="onlyShowQuestionWithAnswer" color="primary" label="Only show the questions that have standard answer" />
+  </div>
   <div class="flex-1 w-full">
     <CreateDatasetButton :id_list="selected_version_id_list" @submit="handleSubmit" />
 

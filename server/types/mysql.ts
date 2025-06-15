@@ -61,3 +61,9 @@ export interface CandidateAnswer {
     author: string; // 用户名
     questionVersion: StdQuestionVersion
 }
+
+export interface Category {
+    id: number;
+    name: string;
+    count: number;  // 每个分类下的问题数量
+}

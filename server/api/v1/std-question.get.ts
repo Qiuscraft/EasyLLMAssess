@@ -10,5 +10,7 @@ export default defineEventHandler(async (event) => {
         query.page !== undefined ? Number(query.page) : 1,
         query.page_size !== undefined ? Number(query.page_size) : 5,
         query.only_show_answered === 'true',
+        query.only_show_no_answered === 'true',
+        query.category as string || ''
     );
 })

@@ -7,12 +7,25 @@ export async function createDataset(name: string, version: string, idList: numbe
     try {
       await conn.beginTransaction();
 
-      // 插入数据集
-      const [result] = await conn.execute(
-        'INSERT INTO dataset (name) VALUES (?)',
+      // 首先检查是否已存在同名数据集
+      const [existingDatasets] = await conn.execute(
+        'SELECT id FROM dataset WHERE name = ?',
         [name]
       );
-      const datasetId = (result as mysql.ResultSetHeader).insertId;
+
+      let datasetId: number;
+
+      if ((existingDatasets as any[]).length > 0) {
+        // 如果存在同名数据集，直接使用其ID
+        datasetId = (existingDatasets as any[])[0].id;
+      } else {
+        // 如果不存在，则创建新的数据集
+        const [result] = await conn.execute(
+          'INSERT INTO dataset (name) VALUES (?)',
+          [name]
+        );
+        datasetId = (result as mysql.ResultSetHeader).insertId;
+      }
 
       // 插入版本信息
       const [versionResult] = await conn.execute(

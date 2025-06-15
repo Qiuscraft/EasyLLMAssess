@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type {Dataset, StdQuestion, StdQuestionVersion} from "~/server/types/mysql";
 import type {TableColumn} from "@nuxt/ui-pro";
-import {UButton, UInput, USelect} from "#components";
+import {UButton, UInput} from "#components";
 import StdQuestionsCard from "~/components/std-question/StdQuestionsCard.vue";
 import Pagination from "~/components/common/Pagination.vue";
 
@@ -29,9 +29,6 @@ const datasets = ref<Dataset[]>([])
 const loading = ref(true)
 const total = ref(0)
 
-// 用于跟踪每个数据集选中的版本
-const selectedVersions = ref<Record<number, number>>({})
-
 async function fetchData() {
   loading.value = true;
   datasets.value = [];
@@ -41,15 +38,26 @@ async function fetchData() {
       query: query.value
     });
     total.value = response.total;
-    datasets.value = response.datasets;
 
-    // 初始化每个数据集的选中版本为最新版本
-    datasets.value.forEach(dataset => {
+    // 将每个数据集的每个版本作为独立条目处理
+    const flattenedDatasets: Dataset[] = [];
+    response.datasets.forEach(dataset => {
       if (dataset.versions && dataset.versions.length > 0) {
-        // 假设版本按时间降序排序，第一个是最新的
-        selectedVersions.value[dataset.id] = dataset.versions[0].id;
+        dataset.versions.forEach(version => {
+          flattenedDatasets.push({
+            ...dataset,
+            // 存储当前版本信息，以便在视图中使用
+            currentVersion: version,
+            // 保留原始版本数组，但已不再需要进行版本切换
+            versions: [version]
+          });
+        });
+      } else {
+        flattenedDatasets.push(dataset);
       }
     });
+
+    datasets.value = flattenedDatasets;
   } catch (error) {
     useToast().add({
       title: "Data Load Failed",
@@ -66,21 +74,17 @@ onMounted(async () => {
 })
 
 const viewingRow = ref<Dataset | null>(null)
-// 当前查看的数据集版本ID
-const currentViewingVersionId = ref<number | null>(null)
 
-// 获取当前选中版本的数据集版本对象
+// 获取当前数据集版本对象
 const getCurrentDatasetVersion = (dataset: Dataset) => {
   if (!dataset.versions || dataset.versions.length === 0) return null;
-
-  const selectedVersionId = selectedVersions.value[dataset.id];
-  return dataset.versions.find(v => v.id === selectedVersionId) || dataset.versions[0];
+  return dataset.versions[0]; // 现在每个数据集只有一个版本
 }
 
 const formattedQuestions = computed<StdQuestion[]>(() => {
   if (!viewingRow.value) return [];
 
-  // 获取当前选中的数据集版本
+  // 获取当前数据集版本
   const currentVersion = getCurrentDatasetVersion(viewingRow.value);
   if (!currentVersion) return [];
 
@@ -163,33 +167,10 @@ const columns: TableColumn<Dataset>[] = [
     },
     cell: ({ row }) => {
       const dataset = row.original;
-
-      // 如果没有版本或只有一个版本，直接显示版本文本
-      if (!dataset.versions || dataset.versions.length <= 1) {
-        return dataset.versions && dataset.versions.length > 0
-          ? dataset.versions[0].version
-          : 'N/A';
-      }
-
-      // 多个版本时，使用USelect显示版本选择器
-      const selectedVersionId = selectedVersions.value[dataset.id] ||
-        (dataset.versions.length > 0 ? dataset.versions[0].id : null);
-
-      // 为USelect准备版本选项
-      const options = dataset.versions.map(v => ({
-        label: v.version,
-        value: v.id,
-      }));
-
-      return h(USelect, {
-        modelValue: selectedVersionId,
-        options: options,
-        'onUpdate:modelValue': (newValue: number) => {
-          selectedVersions.value[dataset.id] = newValue;
-        },
-        size: 'sm',
-        class: 'w-32'
-      });
+      // 显示当前版本的名称
+      return dataset.versions && dataset.versions.length > 0
+        ? dataset.versions[0].version
+        : 'N/A';
     },
   },
   {
@@ -212,14 +193,9 @@ const columns: TableColumn<Dataset>[] = [
     },
     cell: ({ row }) => {
       const dataset = row.original;
-      const selectedVersionId = selectedVersions.value[dataset.id];
-
-      if (!dataset.versions || dataset.versions.length === 0) {
-        return 'N/A';
-      }
-
-      // 返回当前选中版本的ID
-      return selectedVersionId || (dataset.versions.length > 0 ? dataset.versions[0].id : 'N/A');
+      return dataset.versions && dataset.versions.length > 0
+        ? dataset.versions[0].id
+        : 'N/A';
     },
   },
   {
@@ -261,7 +237,6 @@ const columns: TableColumn<Dataset>[] = [
           icon: 'i-lucide-eye',
           onClick: () => {
             viewingRow.value = row.original;
-            currentViewingVersionId.value = selectedVersions.value[row.original.id];
           }
         }),
         // 导出按钮
@@ -288,7 +263,7 @@ const columnPinning = ref({
 
 // 实现导出数据集版本为JSON文件的函数
 const exportDatasetVersion = (dataset: Dataset) => {
-  // 获取当前选中的数据集版本
+  // 获取当前数据集版本
   const currentVersion = getCurrentDatasetVersion(dataset);
   if (!currentVersion) {
     useToast().add({
@@ -303,7 +278,7 @@ const exportDatasetVersion = (dataset: Dataset) => {
   const dataStr = JSON.stringify(currentVersion, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
 
-  // 创建下载链接
+  // 创建��载链接
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -348,16 +323,8 @@ const exportDatasetVersion = (dataset: Dataset) => {
         </template>
         <template #description>
           <div class="flex items-center gap-4">
-            <div v-if="viewingRow.versions && viewingRow.versions.length > 1" class="flex items-center gap-2">
-              <span>Version:</span>
-              <USelect
-                v-model="selectedVersions[viewingRow.id]"
-                :options="viewingRow.versions.map(v => ({ label: v.version, value: v.id }))"
-                size="sm"
-                class="w-40"
-              />
-            </div>
-            <div v-else-if="viewingRow.versions && viewingRow.versions.length === 1">
+            <!-- 显示版本信息，但不提供切换功能 -->
+            <div v-if="viewingRow.versions && viewingRow.versions.length > 0">
               <span>Version: {{ viewingRow.versions[0].version }}</span>
             </div>
 

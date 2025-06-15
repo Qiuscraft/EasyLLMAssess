@@ -102,8 +102,8 @@ export async function getAssessments(page: number = 1, pageSize: number = 5, sor
       FROM assessment a
       JOIN dataset_version dv ON a.dataset_version_id = dv.id
       ORDER BY a.id ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
-      LIMIT ? OFFSET ?
-    `, [pageSize, offset]);
+      LIMIT ${pageSize} OFFSET ${offset}
+    `);
 
     // 如果没有评测记录，直接返回空数组
     if (!Array.isArray(assessments) || assessments.length === 0) {

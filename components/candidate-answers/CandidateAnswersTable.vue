@@ -103,6 +103,15 @@ const columns: TableColumn<StdQuestion>[] = [
     cell: ({ row }) => row.original.std_question.id,
   },
   {
+    accessorKey: 'version',
+    header: 'Version',
+    cell: ({ row }) => {
+      const versionId = row.original.version_id;
+      const versionName = row.original.version_name;
+      return h('div', {}, `${versionName || 'N/A'}`);
+    },
+  },
+  {
     accessorKey: 'std_question_content',
     header: ({}) => {
       return h(FloatingLabeledInput, {

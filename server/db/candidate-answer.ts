@@ -53,7 +53,8 @@ export async function getCandidateAnswer(
         }
 
         if (onlyShowNoStandardAnswer) {
-            conditions.push('NOT EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id)');
+            // 修正条件：显示没有标准答案或者标准答案为空的问题版本
+            conditions.push('(NOT EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id) OR EXISTS (SELECT 1 FROM std_answer sa WHERE sa.std_question_version_id = sqv.id AND (sa.content IS NULL OR sa.content = "")))');
         }
 
         // 构建完整的 WHERE 子句
@@ -79,7 +80,8 @@ export async function getCandidateAnswer(
         // 2. 获取分页数据
         const [rows] = await conn.execute(
             `SELECT ca.id, ca.author, ca.content, ca.std_question_version_id,
-                    sq.id as sq_id, sqv.content as sq_content
+                    sq.id as sq_id, sqv.content as sq_content, 
+                    sqv.id as version_id, sqv.version as version_name
              FROM candidate_answer ca
              LEFT JOIN std_question_version sqv ON ca.std_question_version_id = sqv.id
              LEFT JOIN std_question sq ON sqv.std_question_id = sq.id
@@ -100,6 +102,8 @@ export async function getCandidateAnswer(
                     id: row.sq_id,
                     content: row.sq_content,
                 } as StdQuestionWithoutAnswer,
+                version_id: row.version_id,
+                version_name: row.version_name
             });
         }
 

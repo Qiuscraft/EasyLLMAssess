@@ -68,12 +68,6 @@ export async function getDatasets(id: number | undefined = undefined,
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // 处理排序
-    const orderFieldMap: { [key: string]: string } = {
-      'id': 'd.id',
-      'name': 'd.name',
-      'version': 'dv.name',
-      'created_at': 'dv.created_at'
-    };
     const orderDirection = order_by === 'desc' ? 'DESC' : 'ASC';
 
     // 计算分页

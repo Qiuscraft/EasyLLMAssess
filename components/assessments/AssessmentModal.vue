@@ -173,10 +173,6 @@ const scoreInfo = computed(() => {
     :title="`Assessment Details: ${assessment?.model || ''}`"
     :description="`Dataset: ${assessment?.datasetName || ''} ${assessment?.datasetVersion?.version || ''}`"
   >
-    <template #default>
-      <UButton label="View Details" color="primary" variant="soft" />
-    </template>
-
     <template #body>
       <div class="flex flex-col gap-6">
         <!-- Assessment Overview -->

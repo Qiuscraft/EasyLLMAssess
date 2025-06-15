@@ -74,8 +74,6 @@ export async function getDatasets(id: number | undefined = undefined,
       'version': 'dv.name',
       'created_at': 'dv.created_at'
     };
-
-    const mappedOrderField = orderFieldMap[order_field] || 'dv.created_at';
     const orderDirection = order_by === 'desc' ? 'DESC' : 'ASC';
 
     // 计算分页

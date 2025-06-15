@@ -213,7 +213,12 @@ const scoreInfo = computed(() => {
       </div>
 
       <!-- Score Details Modal -->
-      <UModal v-model:open="showScoreDetails" :title="`Score Details: ${selectedAnswer?.id || ''}`">
+      <UModal
+        v-model:open="showScoreDetails"
+        :title="`Score Details: ${selectedAnswer?.id || ''}`"
+        size="3xl"
+        :ui="{ content: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-4rem)] max-w-4xl max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-4rem)] rounded-lg shadow-lg ring ring-default' }"
+      >
         <template #body>
           <div class="mb-4">
             <h3 class="font-medium text-base mb-2">Question:</h3>

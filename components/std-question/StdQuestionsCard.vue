@@ -49,10 +49,14 @@ watch(props.questions, () => {
         <div class="flex items-center gap-2">
           <span>Standard Question #{{sq.id}}-</span>
           <USelect
+              v-if="versionOptions[sq.id].length > 1"
               v-model="selectedVersionString[sq.id]"
               :items="versionOptions[sq.id]"
               class="w-48"
           />
+          <span v-else>
+            {{selectedVersionString[sq.id]}}
+          </span>
           <span>: {{selectedVersion[sq.id].content}}</span>
         </div>
       </template>

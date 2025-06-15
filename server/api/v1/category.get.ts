@@ -1,18 +1,18 @@
-import { withConnection } from "~/server/db/connection";
-import { Category } from "~/server/types/mysql";
+import {withConnection} from "~/server/db/connection";
+import {Category} from "~/server/types/mysql";
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
-    const categories = await withConnection(async (conn) => {
+    return await withConnection(async (conn) => {
       // 查询所有分类及其问题数量
       const [rows] = await conn.execute(
-        `SELECT id, name, question_count as count FROM category ORDER BY name`
+          `SELECT id, name, question_count as count
+           FROM category
+           ORDER BY name`
       );
 
       return rows as Category[];
     });
-
-    return categories;
   } catch (error) {
     console.error("Error fetching categories:", error);
     throw createError({

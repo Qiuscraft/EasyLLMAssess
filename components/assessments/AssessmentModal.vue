@@ -31,9 +31,18 @@ const processedModelAnswers = computed(() => {
   // 为每个modelAnswer关联对应的questionVersion
   return props.assessment.modelAnswers.map(answer => {
     const questionVersion = questionVersionMap.get(answer.stdQuestionVersionId);
+
+    // 计算每个问题的最大总分
+    let maxPossibleScore = 0;
+    if (answer.scoreProcesses && answer.scoreProcesses.length > 0) {
+      maxPossibleScore = answer.scoreProcesses.reduce((sum, process) =>
+        sum + (Number(process.scoringPointMaxScore) || 0), 0);
+    }
+
     return {
       ...answer,
-      questionVersion: questionVersion || answer.questionVersion
+      questionVersion: questionVersion || answer.questionVersion,
+      maxPossibleScore // 添加最大可能分数字段
     };
   });
 });
@@ -65,7 +74,9 @@ const modelAnswersColumns: TableColumn<ModelAnswer>[] = [
     header: 'Score',
     cell: ({ row }: { row: any }) => {
       const modelAnswer = row.original;
-      return modelAnswer.totalScore?.toFixed(2) || '0';
+      const score = modelAnswer.totalScore?.toFixed(2) || '0';
+      const maxScore = modelAnswer.maxPossibleScore?.toFixed(2) || '0';
+      return `${score}/${maxScore}`;
     }
   },
   {
